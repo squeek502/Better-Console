@@ -12,7 +12,19 @@ end
 
 -- shortcut to make it the next day
 c_nextday = function()
-	GetClock():MakeNextDay()
+	if GetClock() then
+		GetClock():MakeNextDay()
+	end
+end
+
+-- added support for going to the mouse location
+c_teleport = function(x, y, z, inst)
+	inst = inst or GetPlayer()
+	if not x then
+		x,y,z = TheInput:GetWorldPosition():Get()
+	end
+	inst.Transform:SetPosition(x, y, z)
+    SuUsed("c_teleport", true)
 end
 
 -- for debugging this mod
