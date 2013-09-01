@@ -13,15 +13,20 @@ local MAX_LINES_IN_CONSOLE_LOG_HISTORY = 1000
 -------------------------------------------
 local require = GLOBAL.require
 
-require "betterdebugprint"
+require "betterconsole/betterdebugprint"
+require "betterconsole/widgets/bettertextedit"
+
 GLOBAL.MAX_CONSOLE_LINES = MAX_LINES_IN_CONSOLE_LOG_HISTORY
 
+-------------------------------------------
+-- postinits
+-------------------------------------------
 AddGlobalClassPostConstruct("screens/consolescreen", "ConsoleScreen", function(self)
 
 	if ENABLE_SMALLER_FONTS then
 		self.console_edit:SetSize(20)
 	end
-	require "betterconsolecommands"
+	require "betterconsole/betterconsolecommands"
 
 end)
 
