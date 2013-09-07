@@ -76,7 +76,7 @@ end
 
 
 ---- This keeps a record of the last n print lines, so that we can feed it into the debug console when it is visible
-MAX_CONSOLE_LINES = 1000
+MAX_CONSOLE_LINES = BetterConsole.Config.MAX_LINES_IN_CONSOLE_LOG_HISTORY or 1000
 MAX_CONSOLE_LINES_SHOWN = 16
 local base_GetConsoleOutputList = GetConsoleOutputList
 
