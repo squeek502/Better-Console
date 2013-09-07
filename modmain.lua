@@ -1,24 +1,25 @@
 
 -- improve the console
 
+GLOBAL.BetterConsole = { 
+	Config = {}
+}
+BetterConsole = GLOBAL.BetterConsole
+
 -------------------------------------------
 -- load config
 -------------------------------------------
 
-modimport("config.lua")
+modimport("scripts/betterconsole/configurable.lua")
+
+LoadConfig("config.default.lua")
+LoadConfig("config.lua")
 
 -------------------------------------------
 -- code
 -------------------------------------------
 local require = GLOBAL.require
 
-GLOBAL.BetterConsole = { 
-	Config = {
-		ENABLE_FONT_SCALING = ENABLE_FONT_SCALING,
-		MAX_LINES_IN_CONSOLE_LOG_HISTORY = MAX_LINES_IN_CONSOLE_LOG_HISTORY,
-	} 
-}
-BetterConsole = GLOBAL.BetterConsole
 
 require "betterconsole/betterconsolecommands"
 require "betterconsole/betterdebugprint"
