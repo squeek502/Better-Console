@@ -1,4 +1,5 @@
 
+local Widget = require "widgets/widget"
 local ImageButton = require "widgets/imagebutton"
 
 -- added <> characters as valid (gotta compare stuff!)
@@ -67,8 +68,13 @@ function ConsoleScreen:Run()
 	if fnstr ~= "" then
 
 		local CONSOLE_HISTORY = GetConsoleHistory()
+		local chunkname
 	
 		SuUsedAdd("console_used")
+
+		if fnstr:sub(0,1) == "=" then
+			fnstr = string.gsub(fnstr, "^=%s*", "return ")
+		end
 	
 		-- ignore consecutive duplicates
 		local laststr = #CONSOLE_HISTORY > 0 and CONSOLE_HISTORY[#CONSOLE_HISTORY] or nil
@@ -81,21 +87,76 @@ function ConsoleScreen:Run()
 		self.history_idx = nil
 	
 		nolineprint("> "..fnstr)
+
+		local result = { self:DoString( fnstr, chunkname ) }
 		
-		local status, r = pcall( loadstring( fnstr ) )
-		if not status and r == "attempt to call a nil value" then
-			fnstr = "return "..fnstr
-			status, r = pcall( loadstring( fnstr ) )
-			r = tostring(r)
-		end
-		
-		if not status then
-			nolineprint(r)
-		elseif r ~= nil then
-			nolineprint(r)
+		if next(result) then
+			nolineprint( unpack(result) )
 		end
 		
 	end
+end
+
+function ConsoleScreen:IsConsoleCommand( str )
+	if string.starts( str, BetterConsole.Config.CONSOLE_COMMAND_PREFIX ) then
+		if str:match("^[A-Za-z0-9_]+$", 2) then
+			return true
+		end
+	end
+
+	return false
+end
+
+function ConsoleScreen:DoString( fnstr, chunkname )
+	local fn, loaderror = loadstring( fnstr, chunkname )
+
+	if not fn then
+		local retry, isconsolecommand = false, false
+
+		if BetterConsole.Config.ENABLE_CONSOLE_COMMAND_AUTOEXEC and self:IsConsoleCommand(fnstr) then
+			fnstr = "return "..fnstr.."()"
+			retry = true
+		elseif BetterConsole.Config.ENABLE_VARIABLE_AUTOPRINT and loaderror:match("'=' expected near '<eof>'") then
+			fnstr = "return "..fnstr
+			retry = true
+		end
+
+		if retry then
+			fn = loadstring( fnstr, chunkname )
+		end
+	end
+
+	if fn then
+		
+		local result = { pcall( fn ) }
+		local status = result[1]
+
+		if status then
+			-- get nil returns if they are succeeded by non-nil ones (under a certain limit of consecutive nil values)
+			-- this allows us to properly print a return like nil, "errormsg"
+			local max_consecutive_nils = 5
+			local consecutive_nils = 0
+			local last_non_nil = 1
+			local i = last_non_nil+1
+			while consecutive_nils < max_consecutive_nils do
+				if result[i] == nil then
+					consecutive_nils = consecutive_nils + 1
+				else
+					for n=i-1,last_non_nil+1,-1 do
+						result[n] = tostring(nil)
+					end
+					last_non_nil = i
+					consecutive_nils = 0
+				end
+				i = i+1
+			end
+		end
+
+		return select(2, unpack(result))
+
+	end
+
+	return loaderror
 end
 
 function ConsoleScreen:OnTextEntered()
@@ -120,12 +181,24 @@ end
 
 local ConsoleScreen_DoInit_base = ConsoleScreen.DoInit or function() end
 function ConsoleScreen:DoInit()
+	if BetterConsole.Config.ENABLE_BLACK_OVERLAY then
+	    self.blackoverlay = self:AddChild( Image("images/global.xml", "square.tex") )
+	    self.blackoverlay:SetVRegPoint(ANCHOR_MIDDLE)
+	    self.blackoverlay:SetHRegPoint(ANCHOR_MIDDLE)
+	    self.blackoverlay:SetVAnchor(ANCHOR_MIDDLE)
+	    self.blackoverlay:SetHAnchor(ANCHOR_MIDDLE)
+	    self.blackoverlay:SetScaleMode(SCALEMODE_FILLSCREEN)
+		self.blackoverlay:SetClickable(false)
+		self.blackoverlay:SetTint(0,0,0,BetterConsole.Config.BLACK_OVERLAY_OPACITY)
+	end
+
 	ConsoleScreen_DoInit_base(self)
 
 	if BetterConsole.Config.ENABLE_FONT_SCALING then
 		local text_size = BetterConsoleUtil.GetScaledTextSize( 30 )
 		self.console_edit:SetSize( text_size )
 	end
+
 
 	local edit_width, label_height = self.console_edit:GetRegionSize()
 
