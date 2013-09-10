@@ -6,7 +6,7 @@ local setfenv = GLOBAL.setfenv
 local error = GLOBAL.error
 
 
-local CFG_ROOT = GLOBAL.require 'betterconsole.cfg_table'
+local CFG_TABLE = GLOBAL.require 'betterconsole.cfg_table'
 
 
 -- modified (stripped down) version of the LoadConfigs function written by simplex for the Blackhouse mod
