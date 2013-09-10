@@ -44,7 +44,7 @@ return function(modenv)
 			end
 
 			-- This needs to be adjusted, so we don't have a dual definition.
-			Logging.MAX_CONSOLE_LINES_SHOWN = GetMaxConsoleLinesShown(text_size)
+			Logging.loghistory:SetViewSize( GetMaxConsoleLinesShown(text_size) )
 			TheFrontEnd.consoletext:SetSize( text_size )
 			TheFrontEnd.consoletext:EnableWordWrap(true)
 
@@ -55,7 +55,7 @@ return function(modenv)
 				local curscreenw = TheSim:GetScreenSize()
 				if curscreenw ~= screenw then
 					local text_size = BetterConsoleUtil.GetScaledTextSize( max_text_size, min_text_size )
-					Logging.MAX_CONSOLE_LINES_SHOWN = GetMaxConsoleLinesShown(text_size)
+					Logging.loghistory:SetViewSize( GetMaxConsoleLinesShown(text_size) )
 					self.consoletext:SetSize( text_size )
 					screenw = curscreenw
 				end

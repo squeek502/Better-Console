@@ -9,8 +9,9 @@ local CFG = require 'betterconsole.cfg_table'
 
 local CircularQueueView = require 'betterconsole.circularqueueview'
 
+local DEFAULT_MAX_CONSOLE_LINES_SHOWN = 16
 
-loghistory = CircularQueueView( CFG.MAX_LINES_IN_CONSOLE_LOG_HISTORY or 1000 )
+loghistory = CircularQueueView( CFG.MAX_LINES_IN_CONSOLE_LOG_HISTORY or 1000, DEFAULT_MAX_CONSOLE_LINES_SHOWN )
 
 
 local function packstring(...)
@@ -46,7 +47,6 @@ function consolelogger(first, ...)
 	end
 end
 
-MAX_CONSOLE_LINES_SHOWN = 16
 
 _G.AddPrintLogger(consolelogger)
 function _G.GetConsoleOutputList()
@@ -54,7 +54,7 @@ function _G.GetConsoleOutputList()
 		TheSim:LuaPrint "custom GetConsoleOutputList running"
 	end
 
-	return loghistory:Tail( MAX_CONSOLE_LINES_SHOWN )
+	return loghistory:Tail()
 end
 
 

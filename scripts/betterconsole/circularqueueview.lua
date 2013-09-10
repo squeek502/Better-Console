@@ -10,10 +10,11 @@ module(..., package.seeall)
 local CircularQueue = require 'betterconsole.circularqueue'
 
 
-local CircularQueueView = Class(CircularQueue, function(self, maxsize)
+local CircularQueueView = Class(CircularQueue, function(self, maxsize, viewsize)
 	CircularQueue._ctor(self, maxsize)
 
 	self.offset = 0
+	self.viewsize = viewsize or 1
 end)
 
 function CircularQueueView:GetOffset()
@@ -22,7 +23,23 @@ end
 
 function CircularQueueView:SetOffset(offset)
 	assert( type(offset) == "number"  )
-	self.offset = math.min(0, math.max(-self.size + 1, offset))
+	offset = math.min(0, math.max(-self.size + 1, offset))
+	if self:IsValidOffset( offset ) then
+		self.offset = offset
+	end
+end
+
+function CircularQueueView:GetViewSize()
+	return self.viewsize
+end
+
+function CircularQueueView:SetViewSize( viewsize )
+	assert( type(viewsize) == "number" and viewsize > 0 )
+	self.viewsize = viewsize
+end
+
+function CircularQueueView:IsValidOffset(offset)
+	return offset > -self.size+self.viewsize
 end
 
 function CircularQueueView:Reset()
@@ -45,8 +62,9 @@ function CircularQueueView:Get(offset)
 end
 
 function CircularQueueView:Tail(n, offset)
-	offset = offset or 0
-	return CircularQueue.Tail(self, n, self.offset + offset)
+	offset = (offset or 0) + self.offset
+	n = n or self.viewsize
+	return CircularQueue.Tail(self, n, offset)
 end
 
 
