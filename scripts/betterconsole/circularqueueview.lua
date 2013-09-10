@@ -21,8 +21,8 @@ function CircularQueueView:GetOffset()
 end
 
 function CircularQueueView:SetOffset(offset)
-	assert( type(offset) == "number" and offset <= 0 )
-	self.offset = offset
+	assert( type(offset) == "number"  )
+	self.offset = math.min(0, math.max(-self.size + 1, offset))
 end
 
 function CircularQueueView:Reset()
@@ -31,7 +31,7 @@ end
 
 -- Steps towards the end.
 function CircularQueueView:Step()
-	self:SetOffset( math.min(0, self:GetOffset() + 1) )
+	self:SetOffset( self:GetOffset() + 1 )
 end
 
 -- Steps towards the beginning.

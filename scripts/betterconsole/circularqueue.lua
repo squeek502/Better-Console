@@ -41,9 +41,9 @@ end
 
 function CircularQueue:Get(offset)
 	offset = offset or 0
-	assert( type(offset) == "number" and offset <= 0 )
+	assert( type(offset) == "number" )
 
-	if self.size == 0 then return end
+	if offset > 0 or self.size == 0 then return end
 
 	return self.data[ (self.i + offset) % self.maxsize ]
 end
@@ -52,11 +52,17 @@ end
 function CircularQueue:Tail(n, offset)
 	TheSim:LuaPrint("Tail " .. tostring(n) .. " " .. tostring(offset) .. " size=" .. tostring(self.size) .. " maxsize=" .. tostring(self.maxsize) .. " " .. tostring(self))
 
-	assert( type(n) == "number" and n >= 0 )
+	assert( type(n) == "number" )
 
 	offset = offset or 0
-	assert( type(offset) == "number" and offset <= 0 )
-	if offset <= -self.size then return {} end
+	assert( type(offset) == "number" )
+
+	if offset > 0 then
+		n = n - offset
+		offset = 0
+	end
+
+	if offset <= -self.size or n <= 0 then return {} end
 
 	n = math.min(n, self.size)
 	local j = ( self.i + offset - n + 1 ) % self.maxsize

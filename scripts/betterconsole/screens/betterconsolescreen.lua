@@ -43,11 +43,11 @@ function ConsoleScreen:OnRawKey( key, down)
 	if key == KEY_TAB then
 		self:AutoComplete()
 	elseif key == KEY_UP then
+		self.console_edit:SetString( self.history:Get() or "" )
 		self.history:StepBack()
-		self.console_edit:SetString( self.history:Get() or "" )
 	elseif key == KEY_DOWN then
+		self.console_edit:SetString( self.history:Get(1) or "" )
 		self.history:Step()
-		self.console_edit:SetString( self.history:Get() or "" )
 	elseif key == KEY_ENTER then
 		self.console_edit:OnProcess()
 	else
@@ -81,9 +81,11 @@ function ConsoleScreen:Run()
 
 	if self.interpreter:IsIdle() then
 		local chunk = self.interpreter:GetChunk()
+		TheSim:LuaPrint("Got chunk: " .. (chunk or ""))
 		-- ignore consecutive duplicates
 		if chunk ~= self.history:Get() then
-			self.history:Insert( self.interpreter:GetChunk() )
+			TheSim:LuaPrint("Storing chunk.")
+			self.history:Insert( chunk )
 		end
 	end
 	
@@ -239,7 +241,6 @@ function ConsoleScreen:ScrollLogUp()
 	Logging.loghistory:StepBack()
 	Logging.loghistory:StepBack()
 	Logging.loghistory:StepBack()
-	SetConsoleLogIndex( GetConsoleLogIndex() - 3 )
 end
 
 function ConsoleScreen:ScrollLogDown()
