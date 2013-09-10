@@ -1,3 +1,5 @@
+module(..., package.seeall)
+
 
 local Widget = require "widgets/widget"
 local ImageButton = require "widgets/imagebutton"
@@ -9,6 +11,26 @@ local ConsoleScreen = require "screens/consolescreen"
 
 local BetterConsoleUtil = require "betterconsole/betterconsoleutil"
 
+
+local CFG = require 'betterconsole.cfg_table'
+local CircularQueueView = require 'betterconsole.circularqueueview'
+local Logging = require 'betterconsole.logging'
+local ConsoleEnv = require 'betterconsole.environment.console'
+local Interpreter = require 'betterconsole.lua.interpreter'
+local Language = require 'betterconsole.lua.language'
+local Commands = require 'betterconsole.environment.commands'
+
+
+--[[
+-- I split this from DoInit() just for visibility, since they are quite
+-- important below.
+--]]
+local function ImbueEssentials(self)
+	self.history = CircularQueueView( CFG.CONSOLE_HISTORY or 128 )
+	self.interpreter = Interpreter("console", ConsoleEnv.env)
+end
+
+
 ---------------------------------------------------
 -- Overwritten functions
 ---------------------------------------------------
@@ -18,33 +40,14 @@ function ConsoleScreen:OnRawKey( key, down)
 	
 	if down then return end
 
-	local CONSOLE_HISTORY = GetConsoleHistory()
-	
 	if key == KEY_TAB then
 		self:AutoComplete()
 	elseif key == KEY_UP then
-		local len = #CONSOLE_HISTORY
-		if len > 0 then
-			if self.history_idx ~= nil then
-				self.history_idx = math.max( 1, self.history_idx - 1 )
-			else
-				self.history_idx = len
-			end
-			self.console_edit:SetString( CONSOLE_HISTORY[ self.history_idx ] )
-		end
+		self.history:StepBack()
+		self.console_edit:SetString( self.history:Get() or "" )
 	elseif key == KEY_DOWN then
-		local len = #CONSOLE_HISTORY
-		if len > 0 then
-			if self.history_idx ~= nil then
-				if self.history_idx == len then
-					self.history_idx = nil
-					self.console_edit:SetString( "" )
-				else
-					self.history_idx = math.min( len, self.history_idx + 1 )
-					self.console_edit:SetString( CONSOLE_HISTORY[ self.history_idx ] )
-				end
-			end
-		end
+		self.history:Step()
+		self.console_edit:SetString( self.history:Get() or "" )
 	elseif key == KEY_ENTER then
 		self.console_edit:OnProcess()
 	else
@@ -62,43 +65,36 @@ function ConsoleScreen:Run()
 	local fnstr = self.console_edit:GetString()
 
 	-- reset log index no matter what (enter becomes an automatic scroll to bottom)
-	SetConsoleLogIndex()
+	Logging.loghistory:Reset()
 
-	-- no reason not to totally ignore empty strings
-	if fnstr ~= "" then
+	-- no reason not to totally ignore blank strings
+	if fnstr:match("^%s*$") then return end
 
-		local CONSOLE_HISTORY = GetConsoleHistory()
-		local chunkname
-	
-		SuUsedAdd("console_used")
+	SuUsedAdd("console_used")
 
-		if fnstr:sub(0,1) == "=" then
-			fnstr = string.gsub(fnstr, "^=%s*", "return ")
-		end
-	
+	-- reset history index on each new command
+	self.history:Reset()
+
+	nolineprint("> "..fnstr)
+
+	local result = self:DoString( fnstr )
+
+	if self.interpreter:IsIdle() then
+		local chunk = self.interpreter:GetChunk()
 		-- ignore consecutive duplicates
-		local laststr = #CONSOLE_HISTORY > 0 and CONSOLE_HISTORY[#CONSOLE_HISTORY] or nil
-		if laststr ~= nil and laststr == fnstr then
-			table.remove(CONSOLE_HISTORY)
+		if chunk ~= self.history:Get() then
+			self.history:Insert( self.interpreter:GetChunk() )
 		end
-		table.insert( CONSOLE_HISTORY, fnstr )
-
-		-- reset history index on each new command
-		self.history_idx = nil
+	end
 	
-		nolineprint("> "..fnstr)
-
-		local result = { self:DoString( fnstr, chunkname ) }
-		
-		if next(result) then
-			nolineprint( unpack(result) )
-		end
-		
+	if result and next(result) then
+		nolineprint( unpack(result) )
 	end
 end
 
+--[[
 function ConsoleScreen:IsConsoleCommand( str )
-	if string.starts( str, BetterConsole.Config.CONSOLE_COMMAND_PREFIX ) then
+	if string.starts( str, CFG.CONSOLE_COMMAND_PREFIX ) then
 		if str:match("^[A-Za-z0-9_]+$", 2) then
 			return true
 		end
@@ -106,57 +102,51 @@ function ConsoleScreen:IsConsoleCommand( str )
 
 	return false
 end
+]]--
 
-function ConsoleScreen:DoString( fnstr, chunkname )
-	local fn, loaderror = loadstring( fnstr, chunkname )
+function ConsoleScreen:DoString( fnstr, is_recursive )
+	if self.interpreter:IsIdle() then
+		fnstr = string.gsub(fnstr, "^=%s*", "return ")
+	end
 
-	if not fn then
+	local Rets, err = self.interpreter(fnstr)
+	if Rets then return Rets end
+
+	if not err then
+		--[[
+		-- Incomplete chunk.
+		-- How to warn the user of this needs some work.
+		--]]
+		nolineprint("Proceed with input.")
+		return
+	end
+
+	assert( self.interpreter:IsIdle() )
+
+	if not is_recursive then
+		local chunk = self.interpreter:GetChunk()
+
 		local retry, isconsolecommand = false, false
 
-		if BetterConsole.Config.ENABLE_CONSOLE_COMMAND_AUTOEXEC and self:IsConsoleCommand(fnstr) then
-			fnstr = "return "..fnstr.."()"
-			retry = true
-		elseif BetterConsole.Config.ENABLE_VARIABLE_AUTOPRINT and loaderror:match("'=' expected near '<eof>'") then
-			fnstr = "return "..fnstr
+		if not retry and CFG.ENABLE_CONSOLE_COMMAND_AUTOEXEC then
+			local id = chunk:match("^%s*" .. Language.identifier .. "%s*$")
+			if id and Commands[id] then
+				chunk = "return " .. chunk .. "()"
+				retry = true
+			end
+		end
+
+		if not retry and CFG.ENABLE_VARIABLE_AUTOPRINT and err:match("'=' expected near '<eof>'") then
+			chunk = "return " .. chunk
 			retry = true
 		end
 
 		if retry then
-			fn = loadstring( fnstr, chunkname )
+			return self:DoString(chunk, true)
 		end
 	end
 
-	if fn then
-		
-		local result = { pcall( fn ) }
-		local status = result[1]
-
-		if status then
-			-- get nil returns if they are succeeded by non-nil ones (under a certain limit of consecutive nil values)
-			-- this allows us to properly print a return like nil, "errormsg"
-			local max_consecutive_nils = 5
-			local consecutive_nils = 0
-			local last_non_nil = 1
-			local i = last_non_nil+1
-			while consecutive_nils < max_consecutive_nils do
-				if result[i] == nil then
-					consecutive_nils = consecutive_nils + 1
-				else
-					for n=i-1,last_non_nil+1,-1 do
-						result[n] = tostring(nil)
-					end
-					last_non_nil = i
-					consecutive_nils = 0
-				end
-				i = i+1
-			end
-		end
-
-		return select(2, unpack(result))
-
-	end
-
-	return loaderror
+	return {err}
 end
 
 function ConsoleScreen:OnTextEntered()
@@ -181,7 +171,7 @@ end
 
 local ConsoleScreen_DoInit_base = ConsoleScreen.DoInit or function() end
 function ConsoleScreen:DoInit()
-	if BetterConsole.Config.ENABLE_BLACK_OVERLAY then
+	if CFG.ENABLE_BLACK_OVERLAY then
 	    self.blackoverlay = self:AddChild( Image("images/global.xml", "square.tex") )
 	    self.blackoverlay:SetVRegPoint(ANCHOR_MIDDLE)
 	    self.blackoverlay:SetHRegPoint(ANCHOR_MIDDLE)
@@ -189,12 +179,14 @@ function ConsoleScreen:DoInit()
 	    self.blackoverlay:SetHAnchor(ANCHOR_MIDDLE)
 	    self.blackoverlay:SetScaleMode(SCALEMODE_FILLSCREEN)
 		self.blackoverlay:SetClickable(false)
-		self.blackoverlay:SetTint(0,0,0,BetterConsole.Config.BLACK_OVERLAY_OPACITY)
+		self.blackoverlay:SetTint(0,0,0,CFG.BLACK_OVERLAY_OPACITY)
 	end
 
 	ConsoleScreen_DoInit_base(self)
 
-	if BetterConsole.Config.ENABLE_FONT_SCALING then
+	ImbueEssentials(self)
+
+	if CFG.ENABLE_FONT_SCALING then
 		local text_size = BetterConsoleUtil.GetScaledTextSize( 30 )
 		self.console_edit:SetSize( text_size )
 	end
@@ -226,7 +218,7 @@ function ConsoleScreen:DoInit()
     self.clearbutton:SetScale(.6,.6,.6)
     self.clearbutton:SetPosition(0, -label_height, 0)
     self.clearbutton:SetText("Clear Console")
-    self.clearbutton:SetOnClick( function() ClearConsoleLog() end )
+    self.clearbutton:SetOnClick( function() Logging.loghistory:Clear() end )
 end
 
 ---------------------------------------------------
@@ -244,11 +236,16 @@ function ConsoleScreen:OnMouseButton(button, down, x, y)
 end
 
 function ConsoleScreen:ScrollLogUp()
+	Logging.loghistory:StepBack()
+	Logging.loghistory:StepBack()
+	Logging.loghistory:StepBack()
 	SetConsoleLogIndex( GetConsoleLogIndex() - 3 )
 end
 
 function ConsoleScreen:ScrollLogDown()
-	SetConsoleLogIndex( GetConsoleLogIndex() + 3 )
+	Logging.loghistory:Step()
+	Logging.loghistory:Step()
+	Logging.loghistory:Step()
 end
 
 return ConsoleScreen
