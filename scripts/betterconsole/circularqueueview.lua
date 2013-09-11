@@ -23,14 +23,15 @@ end
 
 function CircularQueueView:SetOffset(offset)
 	assert( type(offset) == "number"  )
-	offset = math.min(0, math.max(-self.size + 1, offset))
-	if self:IsValidOffset( offset ) then
-		self.offset = offset
-	end
+	offset = math.min(0, math.max(-self.size + self:GetViewSize(), offset))
+	self.offset = offset
 end
 
+--[[
+-- Returns the "effective" viewsize.
+--]]
 function CircularQueueView:GetViewSize()
-	return self.viewsize
+	return math.min(self.viewsize, self.size)
 end
 
 function CircularQueueView:SetViewSize( viewsize )
@@ -38,32 +39,34 @@ function CircularQueueView:SetViewSize( viewsize )
 	self.viewsize = viewsize
 end
 
+--[[
 function CircularQueueView:IsValidOffset(offset)
-	return offset > -self.size+self.viewsize
+	return -self.size+self:GetViewSize() <= offset and offset <= 0
 end
+]]--
 
 function CircularQueueView:Reset()
 	self:SetOffset(0)
 end
 
 -- Steps towards the end.
-function CircularQueueView:Step()
-	self:SetOffset( self:GetOffset() + 1 )
+function CircularQueueView:Step(numsteps)
+	self:SetOffset( self:GetOffset() + (numsteps or 1) )
 end
 
 -- Steps towards the beginning.
-function CircularQueueView:StepBack()
-	self:SetOffset( self:GetOffset() - 1 )
+function CircularQueueView:StepBack(numsteps)
+	self:Step( -(numsteps or 1) )
 end
 
 function CircularQueueView:Get(offset)
-	offset = offset or 0
-	return CircularQueue.Get(self, self.offset + offset)
+	offset = (offset or 0) + self.offset
+	return CircularQueue.Get(self, offset)
 end
 
 function CircularQueueView:Tail(n, offset)
 	offset = (offset or 0) + self.offset
-	n = n or self.viewsize
+	n = n or self:GetViewSize()
 	return CircularQueue.Tail(self, n, offset)
 end
 

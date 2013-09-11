@@ -9,6 +9,8 @@ local commands = {}
 
 
 local function SlurpCommandsFile(name, overwrite)
+	local fullname = "scripts/" .. name .. ".lua"
+
 	local dumpbin = {}
 	package.seeall(dumpbin)
 
@@ -20,14 +22,17 @@ local function SlurpCommandsFile(name, overwrite)
 		}
 	)
 
-	local fn = loadfile(name)
-	if type(fn) ~= "function" then return error(fn or (tostring(name) .. " doesn't exist!")) end
+	local fn = loadfile(fullname)
+	if type(fn) ~= "function" then return error(fn or (tostring(fullname) .. " doesn't exist!")) end
 
 	setfenv(fn, env)
 
 	fn()
 
-	for k, v in pairs(dumpbin) do
+	RunScript(name)
+
+	for k in pairs(dumpbin) do
+		local v = rawget(_G, k)
 		if type(k) == "string" and not k:match("^_") and type(v) == "function" then
 			if commands[k] == nil or overwrite then
 				commands[k] = v
@@ -37,7 +42,7 @@ local function SlurpCommandsFile(name, overwrite)
 end
 
 
-SlurpCommandsFile("scripts/consolecommands.lua")
+SlurpCommandsFile("consolecommands")
 
 
 return commands

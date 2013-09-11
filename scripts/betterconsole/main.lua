@@ -64,4 +64,27 @@ return function(modenv)
 		end
 		
 	end )
+
+	--[[
+	-- This is bad, but it seems to be the only way to properly add components
+	-- to a generic character WITH the loading of savedata (as stated by
+	-- Ipsquiggle when _Q_ had the same issue).
+	--
+	-- The component should be added to the character so that it'll be
+	-- transported across cave entry/exit.
+	--]]
+	AddPrefabPostInit("world", function()
+		local character = SaveGameIndex:GetSlotCharacter()
+
+		TheSim:LoadPrefabs {character}
+
+		local oldfn = Prefabs[character].fn
+		Prefabs[character].fn = function(...)
+			local inst = oldfn(...)
+
+			inst:AddComponent("historysaver")
+
+			return inst
+		end
+	end)
 end

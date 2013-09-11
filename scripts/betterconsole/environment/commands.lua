@@ -54,7 +54,7 @@ end
 --[[
 -- Now put everything into the console environment.
 --]]
-ConsoleEnv:SlurpTable(_M)
+ConsoleEnv.SlurpTable(_M)
 
 
 return _M

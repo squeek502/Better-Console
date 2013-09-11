@@ -13,8 +13,8 @@ local BetterConsoleUtil = require "betterconsole/betterconsoleutil"
 
 
 local CFG = require 'betterconsole.cfg_table'
-local CircularQueueView = require 'betterconsole.circularqueueview'
 local Logging = require 'betterconsole.logging'
+local History = require 'betterconsole.history'
 local ConsoleEnv = require 'betterconsole.environment.console'
 local Interpreter = require 'betterconsole.lua.interpreter'
 local Language = require 'betterconsole.lua.language'
@@ -26,7 +26,6 @@ local Commands = require 'betterconsole.environment.commands'
 -- important below.
 --]]
 local function ImbueEssentials(self)
-	self.history = CircularQueueView( CFG.CONSOLE_HISTORY or 128 )
 	self.interpreter = Interpreter("console", ConsoleEnv.env)
 end
 
@@ -43,11 +42,11 @@ function ConsoleScreen:OnRawKey( key, down)
 	if key == KEY_TAB then
 		self:AutoComplete()
 	elseif key == KEY_UP then
-		self.console_edit:SetString( self.history:Get() or "" )
-		self.history:StepBack()
+		self.console_edit:SetString( History.history:Get() or "" )
+		History.history:Step(-1)
 	elseif key == KEY_DOWN then
-		self.console_edit:SetString( self.history:Get(1) or "" )
-		self.history:Step()
+		History.history:Step(1)
+		self.console_edit:SetString( History.history:Get(1) or "" )
 	elseif key == KEY_ENTER then
 		self.console_edit:OnProcess()
 	else
@@ -73,7 +72,7 @@ function ConsoleScreen:Run()
 	SuUsedAdd("console_used")
 
 	-- reset history index on each new command
-	self.history:Reset()
+	History.history:Reset()
 
 	nolineprint("> "..fnstr)
 
@@ -83,9 +82,9 @@ function ConsoleScreen:Run()
 		local chunk = self.interpreter:GetChunk()
 		TheSim:LuaPrint("Got chunk: " .. (chunk or ""))
 		-- ignore consecutive duplicates
-		if chunk ~= self.history:Get() then
+		if chunk ~= History.history:Get() then
 			TheSim:LuaPrint("Storing chunk.")
-			self.history:Insert( chunk )
+			History.history:Insert( chunk )
 		end
 	end
 	
@@ -109,6 +108,13 @@ end
 function ConsoleScreen:DoString( fnstr, is_recursive )
 	if self.interpreter:IsIdle() then
 		fnstr = string.gsub(fnstr, "^=%s*", "return ")
+
+		if CFG.ENABLE_CONSOLE_COMMAND_AUTOEXEC then
+			local id = fnstr:match("^%s*" .. Language.identifier .. "%s*$")
+			if id and Commands[id] then
+				fnstr = "return " .. fnstr .. "()"
+			end
+		end
 	end
 
 	local Rets, err = self.interpreter(fnstr)
@@ -129,14 +135,6 @@ function ConsoleScreen:DoString( fnstr, is_recursive )
 		local chunk = self.interpreter:GetChunk()
 
 		local retry, isconsolecommand = false, false
-
-		if not retry and CFG.ENABLE_CONSOLE_COMMAND_AUTOEXEC then
-			local id = chunk:match("^%s*" .. Language.identifier .. "%s*$")
-			if id and Commands[id] then
-				chunk = "return " .. chunk .. "()"
-				retry = true
-			end
-		end
 
 		if not retry and CFG.ENABLE_VARIABLE_AUTOPRINT and err:match("'=' expected near '<eof>'") then
 			chunk = "return " .. chunk
