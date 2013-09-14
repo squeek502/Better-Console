@@ -80,16 +80,20 @@ function ConsoleScreen:Run()
 
 	if self.interpreter:IsIdle() then
 		local chunk = self.interpreter:GetChunk()
-		TheSim:LuaPrint("Got chunk: " .. (chunk or ""))
+--		TheSim:LuaPrint("Got chunk: " .. (chunk or ""))
 		-- ignore consecutive duplicates
 		if chunk ~= History.history:Get() then
-			TheSim:LuaPrint("Storing chunk.")
+--			TheSim:LuaPrint("Storing chunk.")
 			History.history:Insert( chunk )
 		end
 	end
 	
-	if result and next(result) then
-		nolineprint( unpack(result) )
+	if result and #result > 0 then
+		local r = {}
+		for i, v in ipairs(result) do
+			table.insert(r, tostring(v))
+		end
+		nolineprint( unpack(r) )
 	end
 end
 
@@ -162,7 +166,9 @@ function ConsoleScreen:Close()
 	SetPause(false)
 	TheInput:EnableDebugToggle(true)
 	TheFrontEnd:PopScreen()
-	TheFrontEnd:HideConsoleLog()
+	if CFG.HIDE_LOG_ON_CLOSE then
+		TheFrontEnd:HideConsoleLog()
+	end
 end
 
 ---------------------------------------------------

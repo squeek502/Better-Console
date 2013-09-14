@@ -24,9 +24,11 @@ end
 
 
 function consolelogger(first, ...)
+	--[[
 	if TheSim and TheSim.LuaPrint then
 		TheSim:LuaPrint "custom console logger running"
 	end
+	]]--
 
 	local caller = debug.getinfo(2, 'f').func
 	if caller == standard_print and type(first) == "string" then
@@ -50,9 +52,11 @@ end
 
 _G.AddPrintLogger(consolelogger)
 function _G.GetConsoleOutputList()
+	--[[
 	if TheSim and TheSim.LuaPrint then
 		TheSim:LuaPrint "custom GetConsoleOutputList running"
 	end
+	]]--
 
 	return loghistory:Tail()
 end

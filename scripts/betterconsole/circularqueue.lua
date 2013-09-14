@@ -18,7 +18,7 @@ end
 
 -- Inserts at the end.
 function CircularQueue:Insert(x)
-	TheSim:LuaPrint("Insert! " .. tostring(self))
+--	TheSim:LuaPrint("Insert! " .. tostring(self))
 	self.i = self.i + 1
 	if self.i > self.maxsize then
 		self.i = self.i - self.maxsize
@@ -50,7 +50,7 @@ end
 
 -- Returns the n elements from the end as a table, with a given offset.
 function CircularQueue:Tail(n, offset)
-	TheSim:LuaPrint("Tail " .. tostring(n) .. " " .. tostring(offset) .. " size=" .. tostring(self.size) .. " maxsize=" .. tostring(self.maxsize) .. " " .. tostring(self))
+--	TheSim:LuaPrint("Tail " .. tostring(n) .. " " .. tostring(offset) .. " size=" .. tostring(self.size) .. " maxsize=" .. tostring(self.maxsize) .. " " .. tostring(self))
 
 	assert( type(n) == "number" )
 
@@ -71,7 +71,7 @@ function CircularQueue:Tail(n, offset)
 
 	for count = 1, n do
 		ret[count] = self.data[j]
-		TheSim:LuaPrint("Putting " .. tostring(ret[count]))
+--		TheSim:LuaPrint("Putting " .. tostring(ret[count]))
 
 		j = j + 1
 		if j > self.maxsize then

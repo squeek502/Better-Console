@@ -28,3 +28,6 @@ ENABLE_VARIABLE_AUTOPRINT = true
 -- how many lines of console history to save across game sessions.
 -- the save is done on a per-slot bases, and setting it to 0 disables it.
 HISTORY_LINES_SAVED = 16
+
+-- when true, hides the console log when the console it closed.
+HIDE_LOG_ON_CLOSE = true

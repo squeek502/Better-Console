@@ -13,10 +13,10 @@ local function process_code(self)
 		self.status = "RUNNING"
 
 		while true do
-			print "waiting line"
+			--print "waiting line"
 			local newline = coroutine.yield(false, nil):gsub("%s+$", "")
 			if newline ~= "" then
-				print("got line ", newline)
+			--	print("got line ", newline)
 				return newline
 			end
 		end
@@ -41,14 +41,14 @@ local function process_code(self)
 	end
 
 	
-	print "first halt"
+	--print "first halt"
 	self.status = "IDLE"
 	-- Halts execution, waiting for the first input.
 	coroutine.yield()
 
 
 	while true do
-		print "loop start"
+		--print "loop start"
 		local is_incomplete = false
 		local function set_incomplete()
 			is_incomplete = true
@@ -56,19 +56,19 @@ local function process_code(self)
 
 		table.insert( self.code_pieces, line_grabber() )
 		local fn, err = load( NewHistoryFeeder(set_incomplete), chunkname )
-		print "load ended"
+		--print "load ended"
 		self.status = "IDLE"
 
 		if fn then
-			print "function loaded"
+			--print "function loaded"
 			coroutine.yield(true, fn)
 			self.code_pieces = {}
 		elseif not is_incomplete then
-			print "invalid chunk"
+			--print "invalid chunk"
 			coroutine.yield(false, err)
 			self.code_pieces = {}
 		else
-			print "incomplete chunk"
+			--print "incomplete chunk"
 		end
 	end
 end
@@ -131,7 +131,7 @@ end
 -- return value is the error message.
 
 function Interpreter:Process(code)
-	print("process ", code)
+	--print("process ", code)
 	local fn
 
 	do
