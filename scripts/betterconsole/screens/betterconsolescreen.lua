@@ -60,6 +60,14 @@ function ConsoleScreen:OnRawKey( key, down)
 	return true
 end
 
+-- just need to overwrite this, Klei made the console lock focus in this function :(
+function ConsoleScreen:OnBecomeActive()
+	ConsoleScreen._base.OnBecomeActive(self)
+	TheFrontEnd:ShowConsoleLog()
+
+	self.console_edit:SetEditing(true)
+end
+
 function ConsoleScreen:Run()
 	local fnstr = self.console_edit:GetString()
 
