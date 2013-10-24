@@ -205,6 +205,7 @@ function ConsoleScreen:DoInit()
 		self.console_edit:SetSize( text_size )
 	end
 
+	self.edit_bg:SetClickable(false)
 
 	local edit_width, label_height = self.console_edit:GetRegionSize()
 
