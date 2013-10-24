@@ -123,7 +123,8 @@ function ConsoleScreen:DoString( fnstr, is_recursive )
 
 		if CFG.ENABLE_CONSOLE_COMMAND_AUTOEXEC then
 			local id = fnstr:match("^%s*" .. Language.identifier .. "%s*$")
-			if id and Commands[id] then
+			-- use rawget here to avoid strict.lua when looking up a variable name that doesn't exist
+			if id and type( rawget( Commands, id ) ) == "function" then
 				fnstr = "return " .. fnstr .. "()"
 			end
 		end

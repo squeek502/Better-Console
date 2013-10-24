@@ -1,7 +1,7 @@
 module(..., package.seeall)
 
 
-local ConsoleEnv = require(_PACKAGE .. ".console")
+local ConsoleEnv = require(_PACKAGE .. "console")
 
 
 -- First, import the standard commands.

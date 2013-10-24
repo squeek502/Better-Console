@@ -29,7 +29,7 @@ local function SlurpCommandsFile(name, overwrite)
 
 	fn()
 
-	RunScript(name)
+	require(name)
 
 	for k in pairs(dumpbin) do
 		local v = rawget(_G, k)
