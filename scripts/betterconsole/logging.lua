@@ -58,7 +58,7 @@ function _G.GetConsoleOutputList()
 	end
 	]]--
 
-	return loghistory:Tail()
+	return loghistory:Tail() or {}
 end
 
 
