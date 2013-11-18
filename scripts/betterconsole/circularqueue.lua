@@ -65,7 +65,7 @@ function CircularQueue:Tail(n, offset)
 	if offset <= -self.size or n <= 0 then return {} end
 
 	n = math.min(n, self.size)
-	local j = ( self.i + offset - n + 1 ) % self.maxsize
+	local j = 1 + ( self.i + offset - n ) % self.maxsize
 
 	local ret = {}
 
