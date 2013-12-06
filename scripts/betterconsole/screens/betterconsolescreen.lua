@@ -95,10 +95,13 @@ function ConsoleScreen:Run()
 			History.history:Insert( chunk )
 		end
 	end
+
+	local result_size = result and (result.n or #result) or 0
 	
-	if result and #result > 0 then
+	if result_size > 0 then
 		local r = {}
-		for i, v in ipairs(result) do
+		for i = 1, result_size do
+			local v = result[i]
 			table.insert(r, tostring(v))
 		end
 		nolineprint( unpack(r) )

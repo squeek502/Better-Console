@@ -116,7 +116,7 @@ end
 
 
 local function split_first(x, ...)
-	return x, {...}
+	return x, {n = select("#", ...), ...}
 end
 
 ---
