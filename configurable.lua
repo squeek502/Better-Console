@@ -5,6 +5,10 @@ local tonumber = GLOBAL.tonumber
 local setfenv = GLOBAL.setfenv
 local error = GLOBAL.error
 
+
+local CFG_TABLE = GLOBAL.require 'betterconsole.cfg_table'
+
+
 -- modified (stripped down) version of the LoadConfigs function written by simplex for the Blackhouse mod
 -- see: https://github.com/nsimplex/Blackhouse/blob/master/src/customizability.lua
 function LoadConfig(file)
@@ -22,14 +26,8 @@ function LoadConfig(file)
 		tonumber = tonumber,
 	},
 	{
-		__index = BetterConsole.Config,
-		__newindex = function(env, k, v)
-			if BetterConsole.Config then
-				BetterConsole.Config[k] = v
-			else
-				rawset(env, k, v)
-			end
-		end
+		__index = CFG_TABLE,
+		__newindex = CFG_TABLE,
 	}))
 
 	cfg()

@@ -24,3 +24,13 @@ CONSOLE_COMMAND_PREFIX = "c_"
 
 -- when true, automatically prints back the value of a variable when only a variable name is input to the console (example: 'TUNING' will be translated to 'return TUNING')
 ENABLE_VARIABLE_AUTOPRINT = true
+
+-- how many lines of console history to save across game sessions.
+-- the save is done on a per-slot bases, and setting it to 0 disables it.
+HISTORY_LINES_SAVED = 16
+
+-- when true, hides the console log when the console it closed.
+HIDE_LOG_ON_CLOSE = true
+
+-- when true, enables multiline console input support by default (can be toggled on/off ingame)
+MULTILINE_INPUT_DEFAULT = false

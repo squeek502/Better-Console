@@ -19,4 +19,4 @@ icon_atlas = "modicon.xml"
 icon = "modicon.tex"
 
 -- Load before absolutely everything
-priority = 1000
+priority = 2^10

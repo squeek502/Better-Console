@@ -1,5 +1,22 @@
+module(..., package.seeall)
 
-require "consolecommands"
+
+local ConsoleEnv = require(_PACKAGE .. "console")
+
+
+-- First, import the standard commands.
+local standard_commands = require 'betterconsole.standard_commands'
+for k, v in pairs(standard_commands) do
+	_M[k] = v
+end
+
+
+--[[
+-- Now overwrite what you want.
+-- You can reference standard commands, since they are part of the module's
+-- environment now.
+--]]
+
 
 -- added support for calling this with no parameters to set the debugentity to whats under the mouse
 c_select = function(inst)
@@ -32,3 +49,12 @@ c_testprint = function()
 	print("print test")
 	nolineprint("nolineprint test")
 end
+
+
+--[[
+-- Now put everything into the console environment.
+--]]
+ConsoleEnv.SlurpTable(_M)
+
+
+return _M
