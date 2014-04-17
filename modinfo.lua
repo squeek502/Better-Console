@@ -2,7 +2,7 @@
 name = "Better Console"
 description = "A few improvements to the console"
 author = "squeek"
-version = "1.2.0"
+version = "1.3.0"
 
 -- This is the URL name of the mod's thread on the forum; the part after the ? and before the first & in the url
 -- Example:
@@ -12,7 +12,7 @@ version = "1.2.0"
 forumthread = "/files/file/250-better-console/"
 
 -- This lets other players know if your mod is out of date, update it to match the current version in the game
-api_version = 4
+api_version = 5
 
 -- Can specify a custom icon for this mod!
 icon_atlas = "modicon.xml"
