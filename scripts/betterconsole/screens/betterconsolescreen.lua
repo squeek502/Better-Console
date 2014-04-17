@@ -27,6 +27,7 @@ local Commands = require 'betterconsole.environment.commands'
 --]]
 local function ImbueEssentials(self)
 	self.interpreter = Interpreter("console", ConsoleEnv.env)
+	self.interpreter:SetMultiline(CFG.MULTILINE_INPUT_DEFAULT)
 end
 
 
@@ -235,9 +236,19 @@ function ConsoleScreen:DoInit()
 
     self.clearbutton = self.root:AddChild(ImageButton())
     self.clearbutton:SetScale(.6,.6,.6)
-    self.clearbutton:SetPosition(0, -label_height, 0)
+    self.clearbutton:SetPosition(-85, -label_height, 0)
     self.clearbutton:SetText("Clear Console")
     self.clearbutton:SetOnClick( function() Logging.loghistory:Clear() end )
+
+    self.multilineinputbutton = self.root:AddChild(ImageButton())
+    self.multilineinputbutton:SetScale(.6,.6,.6)
+    self.multilineinputbutton.image:SetScale(1.75, 1, 1)
+    self.multilineinputbutton:SetPosition(65, -label_height, 0)
+    local function SetButtonTextBasedOnState()
+    	self.multilineinputbutton:SetText((self.interpreter:IsMultiline() and "Disable" or "Enable").." Multi-Line Input")
+    end
+    SetButtonTextBasedOnState()
+    self.multilineinputbutton:SetOnClick( function() self.interpreter:ToggleMultiline(); SetButtonTextBasedOnState(); end )
 end
 
 ---------------------------------------------------

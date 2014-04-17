@@ -31,3 +31,6 @@ HISTORY_LINES_SAVED = 16
 
 -- when true, hides the console log when the console it closed.
 HIDE_LOG_ON_CLOSE = true
+
+-- when true, enables multiline console input support by default (can be toggled on/off ingame)
+MULTILINE_INPUT_DEFAULT = false

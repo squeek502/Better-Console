@@ -50,9 +50,7 @@ local function process_code(self)
 	while true do
 		--print "loop start"
 		local is_incomplete = false
-		local function set_incomplete()
-			is_incomplete = true
-		end
+		local set_incomplete = self:IsMultiline() and function() is_incomplete = true end or function() end
 
 		table.insert( self.code_pieces, line_grabber() )
 		local fn, err = load( NewHistoryFeeder(set_incomplete), chunkname )
@@ -86,6 +84,7 @@ local Interpreter = Class(function(self, name, env)
 
 	self.name = name
 	self.env = env
+	self.multiline = true
 	
 	self.code_processor = coroutine.create(process_code)
 
@@ -114,6 +113,17 @@ function Interpreter:GetStatus()
 	return self.status
 end
 
+function Interpreter:IsMultiline()
+	return self.multiline
+end
+
+function Interpreter:SetMultiline(state)
+	self.multiline = not self.multiline
+end
+
+function Interpreter:ToggleMultiline()
+	self:SetMultiline(not self:IsMultiline())
+end
 
 local function split_first(x, ...)
 	return x, {n = select("#", ...), ...}
