@@ -19,6 +19,7 @@ local ConsoleEnv = require 'betterconsole.environment.console'
 local Interpreter = require 'betterconsole.lua.interpreter'
 local Language = require 'betterconsole.lua.language'
 local Commands = require 'betterconsole.environment.commands'
+local CWDPattern = require 'betterconsole.cwdpattern'
 
 
 --[[
@@ -160,6 +161,24 @@ function ConsoleScreen:DoString( fnstr, is_recursive )
 
 		if retry then
 			return self:DoString(chunk, true)
+		end
+	end
+
+	-- clean up the error message/stack trace
+	-- get rid of any part of the stack trace that is irrelevant (the console xpcall trace and below)
+	local start_of_console_trace = err:find("%s*="..self.interpreter.name.."%(%d+,%d+%) in main chunk")
+	if start_of_console_trace then
+		err = err:sub(0, start_of_console_trace)
+	end
+
+	-- either make all paths relative to the game dir
+	-- or get rid of the stack trace entirely if it's now empty
+	local start_of_traceback, traceback_header_len = err:find("LUA ERROR stack traceback:")
+	if start_of_traceback then
+		if err:sub(start_of_traceback+traceback_header_len):len() > 0 then
+			err = err:gsub(CWDPattern, "")
+		else
+			err = err:sub(0, start_of_traceback-1)
 		end
 	end
 
