@@ -12,7 +12,7 @@ version = "1.3.0"
 forumthread = "/files/file/250-better-console/"
 
 -- This lets other players know if your mod is out of date, update it to match the current version in the game
-api_version = 5
+api_version = 6
 
 -- Can specify a custom icon for this mod!
 icon_atlas = "modicon.xml"
