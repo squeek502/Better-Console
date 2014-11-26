@@ -10,7 +10,7 @@ local VALID_CHARS = [[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234
 local ConsoleScreen = require "screens/consolescreen"
 
 local BetterConsoleUtil = require "betterconsole/betterconsoleutil"
-
+local ImproveTextEdit = require "betterconsole/widgets/bettertextedit"
 
 local CFG = require 'betterconsole.cfg_table'
 local Logging = require 'betterconsole.logging'
@@ -223,6 +223,7 @@ function ConsoleScreen:DoInit()
 	ConsoleScreen_DoInit_base(self)
 
 	ImbueEssentials(self)
+	ImproveTextEdit(self.console_edit)
 
 	if CFG.ENABLE_FONT_SCALING then
 		local text_size = BetterConsoleUtil.GetScaledTextSize( 30 )

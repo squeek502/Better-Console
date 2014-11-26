@@ -13,7 +13,6 @@ local CFG = require 'betterconsole.cfg_table'
 
 local Logging = require 'betterconsole.logging'
 
-require "betterconsole/widgets/bettertextedit"
 require "betterconsole/screens/betterconsolescreen"
 
 local BetterConsoleUtil = require "betterconsole/betterconsoleutil"
