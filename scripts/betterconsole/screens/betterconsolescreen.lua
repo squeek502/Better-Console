@@ -51,6 +51,15 @@ function ConsoleScreen:OnRawKey( key, down)
 		self.console_edit:SetString( History.history:Get(1) or "" )
 	elseif key == KEY_ENTER then
 		self.console_edit:OnProcess()
+	elseif key == KEY_LCTRL or key == KEY_RCTRL then
+		if self.toggle_remote_execute then
+			self.console_edit:SetPosition( 0,0,0 )
+			self.console_remote_execute:Hide()
+		else
+			self.console_edit:SetPosition( 100,0,0 )
+			self.console_remote_execute:Show()
+		end
+		self.toggle_remote_execute = not self.toggle_remote_execute
 	else
 		self.autocompletePrefix = nil
 		self.autocompleteObjName = ""
@@ -84,29 +93,41 @@ function ConsoleScreen:Run()
 	-- reset history index on each new command
 	History.history:Reset()
 
-	nolineprint("> "..fnstr)
 
-	local result = self:DoString( fnstr )
+	if self.toggle_remote_execute then
+		nolineprint("% "..fnstr)
 
-	if self.interpreter:IsIdle() then
-		local chunk = self.interpreter:GetChunk()
---		TheSim:LuaPrint("Got chunk: " .. (chunk or ""))
+		TheNet:SendRemoteExecute( fnstr )
+
 		-- ignore consecutive duplicates
-		if chunk ~= History.history:Get() then
---			TheSim:LuaPrint("Storing chunk.")
-			History.history:Insert( chunk )
+		if fnstr ~= History.history:Get() then
+			History.history:Insert( fnstr )
 		end
-	end
+	else
+		nolineprint("> "..fnstr)
 
-	local result_size = result and (result.n or #result) or 0
-	
-	if result_size > 0 then
-		local r = {}
-		for i = 1, result_size do
-			local v = result[i]
-			table.insert(r, tostring(v))
+		local result = self:DoString( fnstr )
+
+		if self.interpreter:IsIdle() then
+			local chunk = self.interpreter:GetChunk()
+--			TheSim:LuaPrint("Got chunk: " .. (chunk or ""))
+			-- ignore consecutive duplicates
+			if chunk ~= History.history:Get() then
+--				TheSim:LuaPrint("Storing chunk.")
+				History.history:Insert( chunk )
+			end
 		end
-		nolineprint( unpack(r) )
+
+		local result_size = result and (result.n or #result) or 0
+		
+		if result_size > 0 then
+			local r = {}
+			for i = 1, result_size do
+				local v = result[i]
+				table.insert(r, tostring(v))
+			end
+			nolineprint( unpack(r) )
+		end
 	end
 end
 
