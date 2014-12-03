@@ -167,7 +167,7 @@ function Interpreter:Process(code)
 
 	setfenv(fn, self.env)
 
-	local run_status, run_rets = split_first(xpcall(fn, debug.traceback))
+	local run_status, run_rets = split_first(pcall(fn))
 
 	if run_status then
 		return run_rets
