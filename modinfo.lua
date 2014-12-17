@@ -3,6 +3,7 @@ name = "Better Console"
 description = "A few improvements to the console"
 author = "squeek"
 version = "1.3.0"
+dst_compatible = true
 
 -- This is the URL name of the mod's thread on the forum; the part after the ? and before the first & in the url
 -- Example:
