@@ -36,39 +36,22 @@ end
 -- Overwritten functions
 ---------------------------------------------------
 
-function ConsoleScreen:OnRawKey( key, down)
+-- better up/down arrow history
+local ConsoleScreen_OnRawKey_base = ConsoleScreen.OnRawKey or function() end
+function ConsoleScreen:OnRawKey( key, down )
 	if ConsoleScreen._base.OnRawKey(self, key, down) then return true end
-	
-	if down then return end
 
-	if key == KEY_TAB then
-		self:AutoComplete()
-	elseif key == KEY_UP then
+	if not down and key == KEY_UP then
 		self.console_edit:SetString( History.history:Get() or "" )
 		History.history:Step(-1)
-	elseif key == KEY_DOWN then
+		return true
+	elseif not down and key == KEY_DOWN then
 		History.history:Step(1)
 		self.console_edit:SetString( History.history:Get(1) or "" )
-	elseif key == KEY_ENTER then
-		self.console_edit:OnProcess()
-	elseif key == KEY_LCTRL or key == KEY_RCTRL then
-		if self.toggle_remote_execute then
-			self.console_edit:SetPosition( 0,0,0 )
-			self.console_remote_execute:Hide()
-		else
-			self.console_edit:SetPosition( 100,0,0 )
-			self.console_remote_execute:Show()
-		end
-		self.toggle_remote_execute = not self.toggle_remote_execute
-	else
-		self.autocompletePrefix = nil
-		self.autocompleteObjName = ""
-		self.autocompleteObj = nil
-		self.autocompleteOffset = -1
-		return false
+		return true
 	end
-	
-	return true
+
+	return ConsoleScreen_OnRawKey_base(self, key, down)
 end
 
 -- just need to overwrite this, Klei made the console lock focus in this function :(
