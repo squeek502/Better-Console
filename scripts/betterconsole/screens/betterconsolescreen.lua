@@ -49,6 +49,8 @@ function ConsoleScreen:OnRawKey( key, down )
 		History.history:Step(1)
 		self.console_edit:SetString( History.history:Get(1) or "" )
 		return true
+	elseif not down and key == KEY_ENTER then
+		self.console_edit:OnProcess()
 	end
 
 	return ConsoleScreen_OnRawKey_base(self, key, down)
