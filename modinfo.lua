@@ -4,6 +4,8 @@ description = "A few improvements to the console"
 author = "squeek"
 version = "1.3.0"
 dst_compatible = true
+client_only_mod = true
+all_clients_require_mod = false
 
 -- This is the URL name of the mod's thread on the forum; the part after the ? and before the first & in the url
 -- Example:
