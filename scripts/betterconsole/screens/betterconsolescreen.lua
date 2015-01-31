@@ -202,7 +202,6 @@ function ConsoleScreen:OnTextEntered()
 end
 
 function ConsoleScreen:Close()
-	SetPause(false)
 	TheInput:EnableDebugToggle(true)
 	TheFrontEnd:PopScreen()
 	if CFG.HIDE_LOG_ON_CLOSE then
