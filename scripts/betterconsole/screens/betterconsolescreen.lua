@@ -82,7 +82,8 @@ function ConsoleScreen:Run()
 	if self.toggle_remote_execute then
 		nolineprint("% "..fnstr)
 
-		TheNet:SendRemoteExecute( fnstr )
+		local x, y, z = TheSim:ProjectScreenPos(TheSim:GetPosition())
+		TheNet:SendRemoteExecute( fnstr, x, z )
 
 		-- ignore consecutive duplicates
 		if fnstr ~= History.history:Get() then
