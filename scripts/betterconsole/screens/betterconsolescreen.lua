@@ -62,6 +62,8 @@ function ConsoleScreen:OnBecomeActive()
 	TheFrontEnd:ShowConsoleLog()
 
 	self.console_edit:SetEditing(true)
+
+	self:ToggleRemoteExecute(true) -- if we are admin, start in remote mode
 end
 
 function ConsoleScreen:Run()
