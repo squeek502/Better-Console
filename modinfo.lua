@@ -2,7 +2,10 @@
 name = "Better Console"
 description = "A few improvements to the console"
 author = "squeek"
-version = "1.3.0"
+version = "1.3.0a"
+dont_starve_compatible = true
+reign_of_giants_compatible = true
+shipwrecked_compatible = true
 
 -- This is the URL name of the mod's thread on the forum; the part after the ? and before the first & in the url
 -- Example:
