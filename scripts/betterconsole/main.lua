@@ -11,11 +11,11 @@ local CFG = require "betterconsole.cfg_table"
 
 --require "betterconsole.betterdebugprint"
 
-local Logging = require "betterconsole.logging"
+local Logging = require "betterconsole.lib.logging"
 
 require "betterconsole.screens.betterconsolescreen"
 
-local BetterConsoleUtil = require "betterconsole.betterconsoleutil"
+local BetterConsoleUtil = require "betterconsole.lib.betterconsoleutil"
 
 
 return function(modenv)

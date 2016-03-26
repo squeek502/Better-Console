@@ -7,7 +7,7 @@ module(..., package.seeall)
 local CFG = require "betterconsole.cfg_table"
 
 
-local CircularQueueView = require "betterconsole.circularqueueview"
+local CircularQueueView = require "betterconsole.lib.circularqueueview"
 
 local DEFAULT_MAX_CONSOLE_LINES_SHOWN = 16
 

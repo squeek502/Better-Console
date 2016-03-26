@@ -6,8 +6,8 @@ module(..., package.seeall)
 
 
 local CFG = require "betterconsole.cfg_table"
-local CircularQueue = require "betterconsole.circularqueueview"
-local CircularQueueView = require "betterconsole.circularqueueview"
+local CircularQueue = require "betterconsole.lib.circularqueueview"
+local CircularQueueView = require "betterconsole.lib.circularqueueview"
 
 
 history = CircularQueueView( CFG.CONSOLE_HISTORY or 128 )

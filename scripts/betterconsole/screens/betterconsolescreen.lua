@@ -9,17 +9,17 @@ local VALID_CHARS = [[ abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234
 
 local ConsoleScreen = require "screens/consolescreen"
 
-local BetterConsoleUtil = require "betterconsole.betterconsoleutil"
+local BetterConsoleUtil = require "betterconsole.lib.betterconsoleutil"
 local ImproveTextEdit = require "betterconsole.widgets.bettertextedit"
 
 local CFG = require "betterconsole.cfg_table"
-local Logging = require "betterconsole.logging"
+local Logging = require "betterconsole.lib.logging"
 local History = require "betterconsole.history"
 local ConsoleEnv = require "betterconsole.environment.console"
 local Interpreter = require "betterconsole.lua.interpreter"
 local Language = require "betterconsole.lua.language"
 local Commands = require "betterconsole.environment.commands"
-local CWDPattern = require "betterconsole.cwdpattern"
+local CWDPattern = require "betterconsole.lib.cwdpattern"
 
 
 --[[
