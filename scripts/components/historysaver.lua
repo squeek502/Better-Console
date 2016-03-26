@@ -1,4 +1,4 @@
-local History = require 'betterconsole.history'
+local History = require "betterconsole.history"
 
 
 local HistorySaver = Class(function(self, inst)

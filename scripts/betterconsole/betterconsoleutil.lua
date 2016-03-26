@@ -10,7 +10,7 @@ local function GetScaledTextSize( max_size, min_size )
 	local textscale = (max_size - min_size) / 3
 
 	local new_size = max_size - screenscale * textscale
-	new_size = tonumber(string.format("%.0f", new_size)) -- round it
+	new_size = math.floor(new_size + 0.5) -- round it
 	new_size = math.max( new_size, min_size )
 
 	--print(screenw, screenscale, textscale, new_size)

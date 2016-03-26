@@ -5,7 +5,7 @@ local ConsoleEnv = require(_PACKAGE .. "console")
 
 
 -- First, import the standard commands.
-local standard_commands = require 'betterconsole.standard_commands'
+local standard_commands = require "betterconsole.standard_commands"
 for k, v in pairs(standard_commands) do
 	_M[k] = v
 end

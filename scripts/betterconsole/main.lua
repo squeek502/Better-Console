@@ -2,20 +2,20 @@ module(..., package.seeall)
 
 -- improve the console
 
-local CFG = require 'betterconsole.cfg_table'
+local CFG = require "betterconsole.cfg_table"
 
 
 -------------------------------------------
 -- code
 -------------------------------------------
 
---require "betterconsole/betterdebugprint"
+--require "betterconsole.betterdebugprint"
 
-local Logging = require 'betterconsole.logging'
+local Logging = require "betterconsole.logging"
 
-require "betterconsole/screens/betterconsolescreen"
+require "betterconsole.screens.betterconsolescreen"
 
-local BetterConsoleUtil = require "betterconsole/betterconsoleutil"
+local BetterConsoleUtil = require "betterconsole.betterconsoleutil"
 
 
 return function(modenv)

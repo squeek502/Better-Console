@@ -4,7 +4,7 @@
 -- The actual environment is the field "env" in the returned module.
 
 
-local env_utils = require 'betterconsole.environment.utils'
+local env_utils = require "betterconsole.environment.utils"
 
 
 module(..., package.seeall)

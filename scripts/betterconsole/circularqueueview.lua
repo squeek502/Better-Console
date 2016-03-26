@@ -7,7 +7,7 @@
 module(..., package.seeall)
 
 
-local CircularQueue = require 'betterconsole.circularqueue'
+local CircularQueue = require "betterconsole.circularqueue"
 
 
 local CircularQueueView = Class(CircularQueue, function(self, maxsize, viewsize)
