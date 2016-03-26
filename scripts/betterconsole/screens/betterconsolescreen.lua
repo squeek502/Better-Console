@@ -15,30 +15,60 @@ local ImproveTextEdit = require "betterconsole.widgets.bettertextedit"
 local CFG = require "betterconsole.cfg_table"
 local Logging = require "betterconsole.lib.logging"
 local History = require "betterconsole.history"
-local ConsoleEnv = require "betterconsole.environment.console"
-local Interpreter = require "betterconsole.lua.interpreter"
-local Language = require "betterconsole.lua.language"
-local Commands = require "betterconsole.environment.commands"
-local CWDPattern = require "betterconsole.lib.cwdpattern"
 
+local preprocess = require "betterconsole.preprocess"
+local Compiler = require "betterconsole.compiler"
+require "betterconsole.processor"
+
+--- 
+
+local oldRun = assert( ConsoleScreen.Run )
+
+--- 
 
 --[[
 -- I split this from DoInit() just for visibility, since they are quite
 -- important below.
 --]]
 local function ImbueEssentials(self)
-	self.interpreter = Interpreter("console", ConsoleEnv.env)
-	self.interpreter:SetMultiline(CFG.MULTILINE_INPUT_DEFAULT)
+	self.compiler = Compiler("console")
+
+	local function process(fn)
+		local chunk = self.compiler:GetChunk()
+		-- ignore consecutive duplicates
+		if chunk ~= History.history:Get() then
+			History.history:Insert( chunk )
+		end
+
+		if self.toggle_remote_execute then
+			nolineprint("% "..chunk)
+		end
+
+		self.console_edit:SetString(chunk)
+		return oldRun(self)
+	end
+
+	self.compiler:SetMultiline(CFG.MULTILINE_INPUT_DEFAULT)
+	self.compiler:SetPreprocessor(preprocess)
+	self.compiler:SetProcessor(process)
 end
 
+---------------------------------------------------
+-- Patched functions
+---------------------------------------------------
 
----------------------------------------------------
--- Overwritten functions
----------------------------------------------------
+
+local oldClose = ConsoleScreen.Close
+function ConsoleScreen:Close()
+	oldClose(self)
+	if not CFG.HIDE_LOG_ON_CLOSE then
+		TheFrontEnd:ShowConsoleLog()
+	end
+end
 
 -- better up/down arrow history
-local ConsoleScreen_OnRawKey_base = ConsoleScreen.OnRawKey or function() end
-function ConsoleScreen:OnRawKey( key, down )
+local oldOnRawKey = ConsoleScreen.OnRawKey or function() end
+function ConsoleScreen:OnRawKey(key, down)
 	if ConsoleScreen._base.OnRawKey(self, key, down) then return true end
 
 	if not down and key == KEY_UP then
@@ -46,24 +76,33 @@ function ConsoleScreen:OnRawKey( key, down )
 		History.history:Step(-1)
 		return true
 	elseif not down and key == KEY_DOWN then
-		History.history:Step(1)
+		if History.history:GetOffset() == 0 then
+			local str = self.console_edit:GetString()
+			if not str:find("^%s*$") then
+				local prechunk = self.compiler:GetChunk()
+				if #prechunk > 0 then
+					str = prechunk.." "..str
+				end
+				if str ~= History.history:Get() then
+					History.history:Insert(str)
+				end
+			end
+		else
+			History.history:Step(1)
+		end
 		self.console_edit:SetString( History.history:Get(1) or "" )
 		return true
 	elseif not down and key == KEY_ENTER then
 		self.console_edit:OnProcess()
 	end
 
-	return ConsoleScreen_OnRawKey_base(self, key, down)
+	return oldOnRawKey(self, key, down)
 end
 
--- just need to overwrite this, Klei made the console lock focus in this function :(
+local oldOnBecomeActive = ConsoleScreen.OnBecomeActive
 function ConsoleScreen:OnBecomeActive()
-	ConsoleScreen._base.OnBecomeActive(self)
-	TheFrontEnd:ShowConsoleLog()
-
-	self.console_edit:SetEditing(true)
-
-	self:ToggleRemoteExecute(true) -- if we are admin, start in remote mode
+	oldOnBecomeActive(self)
+	TheFrontEnd:LockFocus(false)
 end
 
 function ConsoleScreen:Run()
@@ -75,125 +114,17 @@ function ConsoleScreen:Run()
 	-- no reason not to totally ignore blank strings
 	if fnstr:match("^%s*$") then return end
 
-	SuUsedAdd("console_used")
-
 	-- reset history index on each new command
 	History.history:Reset()
 
-
-	if self.toggle_remote_execute then
-		nolineprint("% "..fnstr)
-
-		local x, y, z = TheSim:ProjectScreenPos(TheSim:GetPosition())
-		TheNet:SendRemoteExecute( fnstr, x, z )
-
-		-- ignore consecutive duplicates
-		if fnstr ~= History.history:Get() then
-			History.history:Insert( fnstr )
-		end
-	else
-		nolineprint("> "..fnstr)
-
-		local result = self:DoString( fnstr )
-
-		if self.interpreter:IsIdle() then
-			local chunk = self.interpreter:GetChunk()
---			TheSim:LuaPrint("Got chunk: " .. (chunk or ""))
-			-- ignore consecutive duplicates
-			if chunk ~= History.history:Get() then
---				TheSim:LuaPrint("Storing chunk.")
-				History.history:Insert( chunk )
-			end
-		end
-
-		local result_size = result and (result.n or #result) or 0
-		
-		if result_size > 0 then
-			local r = {}
-			for i = 1, result_size do
-				local v = result[i]
-				table.insert(r, tostring(v))
-			end
-			nolineprint( unpack(r) )
-		end
-	end
+	self.compiler(fnstr)
 end
 
---[[
-function ConsoleScreen:IsConsoleCommand( str )
-	if string.starts( str, CFG.CONSOLE_COMMAND_PREFIX ) then
-		if str:match("^[A-Za-z0-9_]+$", 2) then
-			return true
-		end
-	end
+---------------------------------------------------
+-- Overwritten functions
+---------------------------------------------------
 
-	return false
-end
-]]--
-
-function ConsoleScreen:DoString( fnstr, is_recursive )
-	if self.interpreter:IsIdle() then
-		fnstr = string.gsub(fnstr, "^=%s*", "return ")
-
-		if CFG.ENABLE_CONSOLE_COMMAND_AUTOEXEC then
-			local id = fnstr:match("^%s*" .. Language.identifier .. "%s*$")
-			-- use rawget here to avoid strict.lua when looking up a variable name that doesn't exist
-			if id and type( rawget( Commands, id ) ) == "function" then
-				fnstr = "return " .. fnstr .. "()"
-			end
-		end
-	end
-
-	local Rets, err = self.interpreter(fnstr)
-	if Rets then return Rets end
-
-	if not err then
-		--[[
-		-- Incomplete chunk.
-		-- How to warn the user of this needs some work.
-		--]]
-		nolineprint("Proceed with input.")
-		return
-	end
-
-	assert( self.interpreter:IsIdle() )
-
-	if not is_recursive then
-		local chunk = self.interpreter:GetChunk()
-
-		local retry, isconsolecommand = false, false
-
-		if not retry and CFG.ENABLE_VARIABLE_AUTOPRINT and err:match("'=' expected near '<eof>'") then
-			chunk = "return " .. chunk
-			retry = true
-		end
-
-		if retry then
-			return self:DoString(chunk, true)
-		end
-	end
-
-	-- clean up the error message/stack trace
-	-- get rid of any part of the stack trace that is irrelevant (the console xpcall trace and below)
-	local start_of_console_trace = err:find("%s*="..self.interpreter.name.."%(%d+,%d+%) in main chunk")
-	if start_of_console_trace then
-		err = err:sub(0, start_of_console_trace)
-	end
-
-	-- either make all paths relative to the game dir
-	-- or get rid of the stack trace entirely if it's now empty
-	local start_of_traceback, traceback_header_len = err:find("LUA ERROR stack traceback:")
-	if start_of_traceback then
-		if err:sub(start_of_traceback+traceback_header_len):len() > 0 then
-			err = err:gsub(CWDPattern, "")
-		else
-			err = err:sub(0, start_of_traceback-1)
-		end
-	end
-
-	return {err}
-end
-
+-- local oldOnTextEntered = ConsoleScreen.OnTextEntered
 function ConsoleScreen:OnTextEntered()
 	self:Run()
 	self.console_edit:SetString( "" )
@@ -203,13 +134,7 @@ function ConsoleScreen:OnTextEntered()
     end
 end
 
-function ConsoleScreen:Close()
-	TheInput:EnableDebugToggle(true)
-	TheFrontEnd:PopScreen()
-	if CFG.HIDE_LOG_ON_CLOSE then
-		TheFrontEnd:HideConsoleLog()
-	end
-end
+
 
 ---------------------------------------------------
 -- Extended functions
@@ -274,10 +199,10 @@ function ConsoleScreen:DoInit()
     self.multilineinputbutton.image:SetScale(1.75, 1, 1)
     self.multilineinputbutton:SetPosition(65, -label_height, 0)
     local function SetButtonTextBasedOnState()
-    	self.multilineinputbutton:SetText((self.interpreter:IsMultiline() and "Disable" or "Enable").." Multi-Line Input")
+    	self.multilineinputbutton:SetText((self.compiler:IsMultiline() and "Disable" or "Enable").." Multi-Line Input")
     end
     SetButtonTextBasedOnState()
-    self.multilineinputbutton:SetOnClick( function() self.interpreter:ToggleMultiline(); SetButtonTextBasedOnState(); end )
+    self.multilineinputbutton:SetOnClick( function() self.compiler:ToggleMultiline(); SetButtonTextBasedOnState(); end )
 end
 
 ---------------------------------------------------

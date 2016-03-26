@@ -14,6 +14,7 @@ local CFG = require "betterconsole.cfg_table"
 local Logging = require "betterconsole.lib.logging"
 
 require "betterconsole.screens.betterconsolescreen"
+require "betterconsole.processor"
 
 local BetterConsoleUtil = require "betterconsole.lib.betterconsoleutil"
 
