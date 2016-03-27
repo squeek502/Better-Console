@@ -95,7 +95,6 @@ function ConsoleScreen:OnRawKey(key, down)
 		if #prechunk > 0 then
 			str = prechunk.." "..str
 		end
-		print("chunkzor "..str)
 		if not str:find("^%s*$") then
 			return str
 		end
@@ -114,9 +113,6 @@ function ConsoleScreen:OnRawKey(key, down)
 			History.history:Step(dir)
 			self.compiler:Clear()
 			self.console_edit:SetString( History.history:Get() )
-		else
-			print "nilled"
-			print(History.history:GetOffset())
 		end
 
 		return true

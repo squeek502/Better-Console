@@ -14,7 +14,7 @@ LoadConfig('config.default.lua', true)
 LoadModConfig()
 LoadConfig('config.lua')
 
-print("Better-Console MOD CONFIG STRING\n"..GenerateModConfigString())
+-- print("Better-Console MOD CONFIG STRING\n"..GenerateModConfigString())
 
 -------------------------------------------
 -- bootstrap

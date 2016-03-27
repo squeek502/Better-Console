@@ -178,7 +178,6 @@ local function expand_range(default, range, count)
 	default = shave(default)
 
 	if flags.expand_left and flags.expand_right then
-		print"Shrunk sample"
 		sample = {default}
 		nsample = 1
 	end
@@ -193,14 +192,11 @@ local function expand_range(default, range, count)
 
 		local on_the_left, on_the_right = 0, 0
 		if flags.expand_left and flags.expand_right then
-			print "even split"
 			on_the_left = math.floor(rem/2)
 			on_the_right = math.ceil(rem/2)
 		elseif flags.expand_left then
-			print "left slant"
 			on_the_left = rem
 		else
-			print "right slant"
 			on_the_right = rem
 		end
 
@@ -258,7 +254,7 @@ local function publish(data, ...)
 	local count = fetch "n" or DEFAULT_COUNT
 	assert(type(count) == "number")
 
-	print("Publishing "..label)
+	-- print("Publishing "..label)
 
 	range, default = expand_range(default, range, count)
 

@@ -14,7 +14,6 @@ history = CircularQueueView( CFG.CONSOLE_HISTORY or 128 )
 
 local ins = history.Insert
 history.Insert = function(self, x, ...)
-	print("inserting "..tostring(x))
 	return ins(self, x, ...)
 end
 
