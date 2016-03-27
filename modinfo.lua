@@ -7,7 +7,7 @@ dst_compatible = true
 client_only_mod = true
 all_clients_require_mod = false
 
-forumthread = "/files/file/250-better-console/"
+forumthread = "/files/file/1467-dst-better-console/"
 
 api_version = 10
 
