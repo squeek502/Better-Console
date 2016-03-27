@@ -23,8 +23,8 @@ priority = 2^10
 configuration_options = {
 {
     name = "HISTORY_LINES_SAVED",
-    default = 25,
-    options = {{description="17", data=17},{description="19", data=19},{description="21", data=21},{description="23", data=23},{description="25", data=25},{description="27", data=27},{description="29", data=29},{description="31", data=31},{description="33", data=33},{description="35", data=35},},
+    default = 64,
+    options = {{description="56", data=56},{description="58", data=58},{description="60", data=60},{description="62", data=62},{description="64", data=64},{description="66", data=66},{description="68", data=68},{description="70", data=70},{description="72", data=72},{description="74", data=74},},
     label = "History size",
 },{
     name = "HIDE_LOG_ON_CLOSE",
@@ -68,3 +68,4 @@ configuration_options = {
     label = "Multiline input",
 },
 }
+

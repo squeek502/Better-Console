@@ -29,8 +29,7 @@ end
 ----------------------
 
 -- Preprocesses the code to allow for string substitutions.
--- Only operates over the first line of the input, when it is multiline
--- enabled.
+-- Operates over initial substrings of chunks.
 local function preprocess(str)
 	str = implicit_return(str)
 

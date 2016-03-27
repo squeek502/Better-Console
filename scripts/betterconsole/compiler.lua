@@ -4,12 +4,15 @@ local function default_error_handler(err)
 	nolineprint(err)
 end
 
+local function Nil() end
+
 ---
 -- Coroutine body compiling chunks of text.
 --
 -- @param self A compiler object.
 local function compiler_body(self)
 	local chunkname = self.name and ("=" .. self.name)
+	self.chunkname = chunkname
 
 	-- Saved pieces of an incomplete chunk.
 	self.code_pieces = {}
@@ -21,12 +24,6 @@ local function compiler_body(self)
 		while true do
 			--print "waiting line"
 			local newline = coroutine.yield(true, nil):gsub("%s+$", "")
-			if newline ~= "" then
-				if self.preprocessor and #self.code_pieces == 0 then
-					newline = self.preprocessor(newline, self)
-					assert(type(newline) == "string")
-				end
-			end
 			if newline ~= "" then
 			--	print("got line ", newline)
 				return newline
@@ -40,7 +37,11 @@ local function compiler_body(self)
 		return function()
 			if i < #self.code_pieces then
 				i = i + 1
-				return self.code_pieces[i] .. "\n"
+				local piece = self.code_pieces[i]
+				if i == 1 and self.preprocessor then
+					piece = self.preprocessor(piece)
+				end
+				return piece .. "\n"
 			elseif i == #self.code_pieces then
 				callback()
 				return nil
@@ -85,6 +86,15 @@ local function compiler_body(self)
 	end
 end
 
+local function copyCompiler(new, old)
+	new.multiline = old.multiline or false
+
+	new.preprocessor = old.preprocessor
+	new.processor = old.processor
+	
+	new.error_handler = old.error_handler or default_error_handler
+end
+
 ---
 -- @description The compiler class.
 --
@@ -95,11 +105,8 @@ local Compiler = Class(function(self, name)
 	assert( type(name) == "string" )
 
 	self.name = name
-	self.multiline = false
 
-	self.preprocessor = nil
-	self.processor = nil
-	self.error_handler = nil
+	copyCompiler(self, {})
 	
 	self.compiler_thread = coroutine.create(compiler_body)
 
@@ -111,8 +118,26 @@ local Compiler = Class(function(self, name)
 	assert( self.code_pieces )
 end)
 
-function Compiler:GetChunk()
+function Compiler:Copy(newname)
+	local c = Compiler(newname or self.name)
+	copyCompiler(c, self)
+	return c
+end
+
+function Compiler:GetRawChunk()
 	return table.concat(self.code_pieces, " ")
+end
+
+function Compiler:GetChunk()
+	local chunk = self:GetRawChunk()
+	if self.preprocessor then
+		chunk = self.preprocessor(chunk)
+	end
+	return chunk
+end
+
+function Compiler:GetChunkName()
+	return self.chunkname
 end
 
 function Compiler:GetMultilineChunk()
@@ -148,7 +173,7 @@ function Compiler:ToggleMultiline()
 	self:SetMultiline(not self:IsMultiline())
 end
 
--- Only runs over the first piece of a chunk.
+-- Runs over the final chunk.
 function Compiler:SetPreprocessor(preprocessor)
 	self.preprocessor = preprocessor
 end
@@ -191,6 +216,7 @@ function Compiler:Compile(str)
 	if not ok then
 		if self.error_handler then
 			self.error_handler(fn, self)
+			return true, Nil
 		end
 		return false, fn
 	else

@@ -50,25 +50,31 @@ end
 -- important below.
 --]]
 local function ImbueEssentials(self)
-	self.compiler = Compiler("console")
+	--[[
+	-- A Compiler object used only as a syntax analyzer.
+	--]]
+	self.parser = Compiler("console")
 
 	local function process(fn)
-		local chunk = self.compiler:GetChunk()
-		self.compiler:Clear()
+		local chunk = self.parser:GetChunk()
+		local r_chunk = self.parser:GetRawChunk()
+		self.parser:Clear()
 
-		insertInHistory(chunk)
+		insertInHistory(r_chunk)
 
 		if self.toggle_remote_execute then
-			nolineprint("% "..chunk)
+			nolineprint("% "..r_chunk)
+		else
+			nolineprint("> "..r_chunk)
 		end
 
-		self.console_edit:SetString(chunk)
+		self.console_edit:SetString(r_chunk)
 		return oldRun(self)
 	end
 
-	self.compiler:SetMultiline(false)
-	self.compiler:SetPreprocessor(preprocess)
-	self.compiler:SetProcessor(process)
+	self.parser:SetMultiline(false)
+	self.parser:SetPreprocessor(preprocess)
+	self.parser:SetProcessor(process)
 end
 
 ---------------------------------------------------
@@ -91,7 +97,7 @@ function ConsoleScreen:OnRawKey(key, down)
 
 	local function getfullchunk()
 		local str = self.console_edit:GetString()
-		local prechunk = self.compiler:GetChunk()
+		local prechunk = self.parser:GetChunk()
 		if #prechunk > 0 then
 			str = prechunk.." "..str
 		end
@@ -111,7 +117,7 @@ function ConsoleScreen:OnRawKey(key, down)
 			end
 
 			History.history:Step(dir)
-			self.compiler:Clear()
+			self.parser:Clear()
 			self.console_edit:SetString( History.history:Get() )
 		end
 
@@ -141,7 +147,7 @@ function ConsoleScreen:Run()
 	-- reset history index on each new command
 	History.history:Reset()
 
-	self.compiler(fnstr)
+	self.parser(fnstr)
 end
 
 ---------------------------------------------------
@@ -230,10 +236,10 @@ function ConsoleScreen:DoInit()
 		self.multilineinputbutton:SetPosition(100, -label_height, 0)
 		self.multilineinputbutton:SetTextSize(32)
 		local function SetButtonTextBasedOnState()
-			self.multilineinputbutton:SetText((self.compiler:IsMultiline() and "Disable" or "Enable").." Multiline")
+			self.multilineinputbutton:SetText((self.parser:IsMultiline() and "Disable" or "Enable").." Multiline")
 		end
 		SetButtonTextBasedOnState()
-		self.multilineinputbutton:SetOnClick( function() self.compiler:ToggleMultiline(); SetButtonTextBasedOnState(); end )
+		self.multilineinputbutton:SetOnClick( function() self.parser:ToggleMultiline(); SetButtonTextBasedOnState(); end )
 	end
 end
 

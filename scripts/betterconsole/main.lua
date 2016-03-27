@@ -14,27 +14,50 @@ require "betterconsole.screens.betterconsolescreen"
 
 local BetterConsoleUtil = require "betterconsole.lib.betterconsoleutil"
 
+
+---
+
+local preprocess = require "betterconsole.preprocess"
+
+local Compiler = require "betterconsole.compiler"
+
 local Processor = require "betterconsole.processor"
 
 --- 
 
-local function bindProcessorToMainFunctions(processor)
+local function bindCompilerToMainFunctions(gcc_spec)
 	local run = assert( _G.ExecuteConsoleCommand )
 
-	local function fake_loadstring(str)
-		local fn = assert( loadstring(str) )
-		return function() processor:Process(fn) end
+	local function NewFakeLoadstring(gcc)
+		return function(str)
+			return function() gcc(str) end
+		end
 	end
 
-	function _G.ExecuteConsoleCommand(fnstr, ...)
+
+	local is_dedi = _G.TheNet:IsDedicated()
+
+	local gccs = {
+		stdin = gcc_spec:Copy(is_dedi and "stdin" or "console"),
+	}
+
+	function _G.ExecuteConsoleCommand(fnstr, guid, ...)
 		local loadstring = _G.loadstring
 
-		_G.loadstring = function(str)
-			local fn = assert( loadstring(str) )
-			return function() processor:Process(fn) end
+		local gcc
+		if guid == nil then
+			gcc = gccs.stdin
+		else
+			gcc = gccs[guid]
+			if gcc == nil then
+				local player = _G.Ents[guid]
+				local name = "["..tostring(player.prefab).." - "..tostring(player.userid).."]"
+				gcc = gcc_spec:Copy(name)
+				gccs[guid] = gcc
+			end
 		end
 
-		nolineprint("> "..tostring(fnstr))
+		_G.loadstring = NewFakeLoadstring(gcc)
 
 		run(fnstr, ...)
 
@@ -44,11 +67,15 @@ end
 
 ---
 
-local mainProcessor = Processor()
+local cpu = Processor()
 
-bindProcessorToMainFunctions(mainProcessor)
+local gcc_spec = Compiler("betterconsole")
+gcc_spec:SetMultiline(false)
+gcc_spec:SetPreprocessor(preprocess)
+gcc_spec:SetProcessor(cpu)
 
--- _G.TheNet:IsDedicated()
+bindCompilerToMainFunctions(gcc_spec)
+
 
 --- 
 

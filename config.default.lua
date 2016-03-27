@@ -9,7 +9,7 @@
 
 -- how many lines of console history to save across game sessions.
 -- the save is done on a per-slot bases, and setting it to 0 disables it.
-HISTORY_LINES_SAVED = publish(24, "History size", {ETC, 1, 3, ETC})
+HISTORY_LINES_SAVED = publish(64, "History size", {ETC, 1, 3, ETC})
 
 -- when true, hides the console log when the console it closed.
 HIDE_LOG_ON_CLOSE = publish(true, "Hide on close")
@@ -25,7 +25,7 @@ ENABLE_BLACK_OVERLAY = publish(true, "Black overlay")
 -- controls the opacity of the black background; 0 = fully transparent, 1 = fully opaque
 BLACK_OVERLAY_OPACITY = publish(.5, "Overlay opacity", {n = 11, 0, .1, ETC})
 
--- when true, automatically runs console commands when they are inputted to the console (example: 'c_select' will be translated to 'return c_select())
+-- when true, automatically runs console commands when they are input to the console (example: 'c_select' will be translated to 'return c_select())
 ENABLE_CONSOLE_COMMAND_AUTOEXEC = publish(true, "Command autoexec")
 
 -- when true, automatically prints back the value of a variable when only a variable name is input to the console (example: 'TUNING' will be translated to 'return TUNING')

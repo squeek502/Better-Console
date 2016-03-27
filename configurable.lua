@@ -131,20 +131,21 @@ local function expand_range(default, range, count)
 
 	local range_type
 	local advance
+	local ratio
 	if nsample == 2 or (sample[2] - sample[1]) == (sample[3] - sample[2]) then
 		range_type = "linear"
 
-		local diff = sample[2] - sample[1]
+		ratio = sample[2] - sample[1]
 
 		local function linadvance(x, steps)
-			return x + steps*diff
+			return x + steps*ratio
 		end
 		advance = linadvance
 	else
 		assert(sample[2]/sample[1] == sample[3]/sample[2], "Geometric progression expected.")
 		range_type = "geometric"
 
-		local ratio = sample[2]/sample[1]
+		ratio = sample[2]/sample[1]
 
 		local powers = {[0] = 1, [1] = ratio}
 		local function compute_power(n)
@@ -165,21 +166,21 @@ local function expand_range(default, range, count)
 		advance = geoadvance
 	end
 
-	if range_type == "linear" then
-		default = linfit(default, sample[1], sample[2] - sample[1])
-	else
-		default = math.log(default)
-
-		default = linfit(default, math.log(sample[1]), math.log(sample[2]/sample[1]))
-
-		default = math.exp(default)
-	end
-
 	default = shave(default)
 
 	if flags.expand_left and flags.expand_right then
 		sample = {default}
 		nsample = 1
+	else
+		if range_type == "linear" then
+			default = linfit(default, sample[1], sample[2] - sample[1])
+		else
+			default = math.log(default)
+
+			default = linfit(default, math.log(sample[1]), math.log(sample[2]/sample[1]))
+
+			default = math.exp(default)
+		end
 	end
 
 	local ret = {}

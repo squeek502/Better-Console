@@ -15,7 +15,7 @@ module(..., package.seeall)
 local _G = _G
 
 
-env = {}
+env = {GLOBAL = _G}
 meta = {__index = _G}
 setmetatable(env, meta)
 
