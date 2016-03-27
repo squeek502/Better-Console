@@ -103,32 +103,4 @@ end
 Processor.__call = Processor.Process
 
 
----
-
-local function bindToMainFunctions(processor)
-	local run = assert( _G.ExecuteConsoleCommand )
-
-	local function fake_loadstring(str)
-		local fn = assert( loadstring(str) )
-		return function() processor:Process(fn) end
-	end
-
-	function _G.ExecuteConsoleCommand(fnstr, ...)
-		local loadstring = _G.loadstring
-
-		_G.loadstring = function(str)
-			local fn = assert( loadstring(str) )
-			return function() processor:Process(fn) end
-		end
-
-		run(fnstr, ...)
-
-		_G.loadstring = loadstring
-	end
-end
-
-bindToMainFunctions( Processor() )
-
----
-
 return Processor

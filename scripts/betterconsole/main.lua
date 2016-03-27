@@ -1,23 +1,56 @@
+local _G = _G
+
 module(..., package.seeall)
-
--- improve the console
-
-local CFG = require "betterconsole.cfg_table"
-
 
 -------------------------------------------
 -- code
 -------------------------------------------
 
---require "betterconsole.betterdebugprint"
+local CFG = require "betterconsole.cfg_table"
 
 local Logging = require "betterconsole.lib.logging"
 
 require "betterconsole.screens.betterconsolescreen"
-require "betterconsole.processor"
 
 local BetterConsoleUtil = require "betterconsole.lib.betterconsoleutil"
 
+local Processor = require "betterconsole.processor"
+
+--- 
+
+local function bindProcessorToMainFunctions(processor)
+	local run = assert( _G.ExecuteConsoleCommand )
+
+	local function fake_loadstring(str)
+		local fn = assert( loadstring(str) )
+		return function() processor:Process(fn) end
+	end
+
+	function _G.ExecuteConsoleCommand(fnstr, ...)
+		local loadstring = _G.loadstring
+
+		_G.loadstring = function(str)
+			local fn = assert( loadstring(str) )
+			return function() processor:Process(fn) end
+		end
+
+		nolineprint("> "..tostring(fnstr))
+
+		run(fnstr, ...)
+
+		_G.loadstring = loadstring
+	end
+end
+
+---
+
+local mainProcessor = Processor()
+
+bindProcessorToMainFunctions(mainProcessor)
+
+-- _G.TheNet:IsDedicated()
+
+--- 
 
 return function(modenv)
 	for k, v in pairs(modenv) do
