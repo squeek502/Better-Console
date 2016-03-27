@@ -35,6 +35,8 @@ local function ImbueEssentials(self)
 
 	local function process(fn)
 		local chunk = self.compiler:GetChunk()
+		self.compiler:Clear()
+
 		-- ignore consecutive duplicates
 		if chunk ~= History.history:Get() then
 			History.history:Insert( chunk )
@@ -48,7 +50,7 @@ local function ImbueEssentials(self)
 		return oldRun(self)
 	end
 
-	self.compiler:SetMultiline(CFG.MULTILINE_INPUT_DEFAULT)
+	self.compiler:SetMultiline(false)
 	self.compiler:SetPreprocessor(preprocess)
 	self.compiler:SetProcessor(process)
 end
@@ -76,21 +78,30 @@ function ConsoleScreen:OnRawKey(key, down)
 		History.history:Step(-1)
 		return true
 	elseif not down and key == KEY_DOWN then
-		if History.history:GetOffset() == 0 then
+		local should_add = (History.history:GetOffset() == 0)
+
+		if should_add then
 			local str = self.console_edit:GetString()
+			local prechunk = self.compiler:GetChunk()
+			if #prechunk > 0 then
+				str = prechunk.." "..str
+			end
+			-- FIXME: check all of this
+			print("chunkzor "..str)
 			if not str:find("^%s*$") then
-				local prechunk = self.compiler:GetChunk()
-				if #prechunk > 0 then
-					str = prechunk.." "..str
-				end
+				print("hist: "..History.history:Get())
 				if str ~= History.history:Get() then
+					print("insert "..str)
 					History.history:Insert(str)
 				end
 			end
+			self.compiler:Clear()
+			self.console_edit:SetString("")
 		else
+			self.console_edit:SetString( History.history:Get(1) )
 			History.history:Step(1)
 		end
-		self.console_edit:SetString( History.history:Get(1) or "" )
+
 		return true
 	elseif not down and key == KEY_ENTER then
 		self.console_edit:OnProcess()
@@ -133,8 +144,6 @@ function ConsoleScreen:OnTextEntered()
         TheFrontEnd:HideConsoleLog()
     end
 end
-
-
 
 ---------------------------------------------------
 -- Extended functions
@@ -188,21 +197,31 @@ function ConsoleScreen:DoInit()
 	self.upbutton:SetRotation(-90)
     self.upbutton:SetOnClick( function() self:ScrollLogUp() end )
 
+	local BUTSCALE = .7
+
     self.clearbutton = self.root:AddChild(ImageButton())
-    self.clearbutton:SetScale(.6,.6,.6)
-    self.clearbutton:SetPosition(-85, -label_height, 0)
+    self.clearbutton:SetScale(BUTSCALE, BUTSCALE)
+    -- self.clearbutton:ForceImageSize(200,70)
+	self.clearbutton:SetTextSize(32)
     self.clearbutton:SetText("Clear Console")
     self.clearbutton:SetOnClick( function() Logging.loghistory:Clear() end )
+	self.clearbutton:SetPosition(0, -label_height, 0)
 
-    self.multilineinputbutton = self.root:AddChild(ImageButton())
-    self.multilineinputbutton:SetScale(.6,.6,.6)
-    self.multilineinputbutton.image:SetScale(1.75, 1, 1)
-    self.multilineinputbutton:SetPosition(65, -label_height, 0)
-    local function SetButtonTextBasedOnState()
-    	self.multilineinputbutton:SetText((self.compiler:IsMultiline() and "Disable" or "Enable").." Multi-Line Input")
-    end
-    SetButtonTextBasedOnState()
-    self.multilineinputbutton:SetOnClick( function() self.compiler:ToggleMultiline(); SetButtonTextBasedOnState(); end )
+
+	if CFG.MULTILINE_INPUT then
+		self.clearbutton:SetPosition(-105, -label_height, 0)
+		self.multilineinputbutton = self.root:AddChild(ImageButton())
+		self.multilineinputbutton:SetScale(1.4*BUTSCALE,BUTSCALE)
+	--     self.clearbutton:ForceImageSize(200,70)
+	--     self.multilineinputbutton.image:SetScale(1.4, 1)
+		self.multilineinputbutton:SetPosition(100, -label_height, 0)
+		self.multilineinputbutton:SetTextSize(32)
+		local function SetButtonTextBasedOnState()
+			self.multilineinputbutton:SetText((self.compiler:IsMultiline() and "Disable" or "Enable").." Multiline")
+		end
+		SetButtonTextBasedOnState()
+		self.multilineinputbutton:SetOnClick( function() self.compiler:ToggleMultiline(); SetButtonTextBasedOnState(); end )
+	end
 end
 
 ---------------------------------------------------

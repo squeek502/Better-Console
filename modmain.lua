@@ -1,17 +1,23 @@
 -- improve the console
 
+_G = GLOBAL
+
 -------------------------------------------
 -- load config
 -------------------------------------------
 
 modimport 'configurable.lua'
 
-LoadConfig 'config.default.lua'
-LoadConfig 'config.lua'
+SetConfigTable( _G.require "betterconsole.cfg_table" )
 
+LoadConfig('config.default.lua', true)
+LoadModConfig()
+LoadConfig('config.lua')
+
+print("Better-Console MOD CONFIG STRING\n"..GenerateModConfigString())
 
 -------------------------------------------
 -- bootstrap
 -------------------------------------------
 
-GLOBAL.require('betterconsole.main')(env)
+_G.require('betterconsole.main')(env)

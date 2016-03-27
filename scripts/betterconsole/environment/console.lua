@@ -6,6 +6,8 @@
 
 local env_utils = require "betterconsole.environment.utils"
 
+local CFG = require "betterconsole.cfg_table"
+
 
 module(..., package.seeall)
 
@@ -18,10 +20,17 @@ meta = {__index = _G}
 setmetatable(env, meta)
 
 
-function env.print(...)
+local function print(...)
 	return nolineprint(...)
 end
+env.print = print
 
+function env.betterconsolecfg()
+	print("Active configuration options for Better-Console:")
+	for k, v in pairs(CFG) do
+		print(k.." = "..tostring(v))
+	end
+end
 
 function SlurpTable(t, overwrite)
 	for k, v in pairs(t) do

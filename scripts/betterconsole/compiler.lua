@@ -119,6 +119,10 @@ function Compiler:GetMultilineChunk()
 	return table.concat(self.code_pieces, "\n")
 end
 
+function Compiler:Clear()
+	self.code_pieces = {}
+end
+
 function Compiler:IsIdle()
 	return self.status == "IDLE"
 end
@@ -137,7 +141,7 @@ function Compiler:IsMultiline()
 end
 
 function Compiler:SetMultiline(state)
-	self.multiline = not self.multiline
+	self.multiline = self.multiline
 end
 
 function Compiler:ToggleMultiline()
