@@ -26,6 +26,25 @@ local oldRun = assert( ConsoleScreen.Run )
 
 --- 
 
+local function addToHistory(code)
+	if code ~= nil and code ~= History.history:Get() then
+		History.history:Set(0, code)
+		return true
+	else
+		return false
+	end
+end
+
+local function insertInHistory(code)
+	if code ~= History.history:RawGet() then
+		History.history:RawSet(0, code)
+		History.history:Insert("")
+		return true
+	else
+		return false
+	end
+end
+
 --[[
 -- I split this from DoInit() just for visibility, since they are quite
 -- important below.
@@ -37,10 +56,7 @@ local function ImbueEssentials(self)
 		local chunk = self.compiler:GetChunk()
 		self.compiler:Clear()
 
-		-- ignore consecutive duplicates
-		if chunk ~= History.history:Get() then
-			History.history:Insert( chunk )
-		end
+		insertInHistory(chunk)
 
 		if self.toggle_remote_execute then
 			nolineprint("% "..chunk)
@@ -73,33 +89,34 @@ local oldOnRawKey = ConsoleScreen.OnRawKey or function() end
 function ConsoleScreen:OnRawKey(key, down)
 	if ConsoleScreen._base.OnRawKey(self, key, down) then return true end
 
-	if not down and key == KEY_UP then
-		self.console_edit:SetString( History.history:Get() or "" )
-		History.history:Step(-1)
-		return true
-	elseif not down and key == KEY_DOWN then
-		local should_add = (History.history:GetOffset() == 0)
+	local function getfullchunk()
+		local str = self.console_edit:GetString()
+		local prechunk = self.compiler:GetChunk()
+		if #prechunk > 0 then
+			str = prechunk.." "..str
+		end
+		print("chunkzor "..str)
+		if not str:find("^%s*$") then
+			return str
+		end
+	end
 
-		if should_add then
-			local str = self.console_edit:GetString()
-			local prechunk = self.compiler:GetChunk()
-			if #prechunk > 0 then
-				str = prechunk.." "..str
+	if not down and (key == KEY_UP or key == KEY_DOWN) then
+		local dir = (key == KEY_UP and -1 or 1)
+
+		if History.history:Get(dir) ~= nil then
+			local str = getfullchunk()
+
+			if addToHistory(str) and History.history:GetOffset() == 0 then
+				History.history:Insert("")
 			end
-			-- FIXME: check all of this
-			print("chunkzor "..str)
-			if not str:find("^%s*$") then
-				print("hist: "..History.history:Get())
-				if str ~= History.history:Get() then
-					print("insert "..str)
-					History.history:Insert(str)
-				end
-			end
+
+			History.history:Step(dir)
 			self.compiler:Clear()
-			self.console_edit:SetString("")
+			self.console_edit:SetString( History.history:Get() )
 		else
-			self.console_edit:SetString( History.history:Get(1) )
-			History.history:Step(1)
+			print "nilled"
+			print(History.history:GetOffset())
 		end
 
 		return true

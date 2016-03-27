@@ -39,6 +39,7 @@ function CircularQueue:Remove()
 	return x
 end
 
+-- Tail access
 function CircularQueue:Get(offset)
 	offset = offset or 0
 	assert( type(offset) == "number" )
@@ -46,6 +47,16 @@ function CircularQueue:Get(offset)
 	if offset > 0 or self.size == 0 then return end
 
 	return self.data[ (self.i + offset) % self.maxsize ]
+end
+
+function CircularQueue:Set(offset, val)
+	offset = offset or 0
+
+	assert( type(offset) == "number" )
+
+	if offset > 0 or self.size == 0 then return end
+
+	self.data[ (self.i + offset) % self.maxsize ] = val
 end
 
 -- Returns the n elements from the end as a table, with a given offset.

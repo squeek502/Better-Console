@@ -59,9 +59,16 @@ function CircularQueueView:StepBack(numsteps)
 	self:Step( -(numsteps or 1) )
 end
 
+CircularQueueView.RawGet = CircularQueue.Get
 function CircularQueueView:Get(offset)
 	offset = (offset or 0) + self.offset
 	return CircularQueue.Get(self, offset)
+end
+
+CircularQueueView.RawSet = CircularQueue.Set
+function CircularQueueView:Set(offset, val)
+	offset = (offset or 0) + self.offset
+	return CircularQueue.Set(self, offset, val)
 end
 
 function CircularQueueView:Tail(n, offset)

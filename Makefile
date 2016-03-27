@@ -1,7 +1,7 @@
 CORE_FILES:=modinfo.lua $(wildcard modmain.lua) $(wildcard modworldgenmain.lua)
 LIB_FILES:=
 
-UTILITY_FILES:=scripts/ configurable.lua
+UTILITY_FILES:=configurable.lua $(shell find scripts -name '*.lua')
 
 MISC_FILES:=config.default.lua 
 
@@ -16,8 +16,10 @@ FILES:=$(CORE_FILES) $(LIB_FILES) $(UTILITY_FILES) $(MISC_FILES) $(ICON_FILES)
 STAGE_DIR:=workshop
 .PHONY: dist clean stage
 
+#NAME:=$(patsubst %_git,%,$(notdir $(CURDIR)))
+NAME:=$(notdir $(CURDIR))
 
-ZIPNAME:=$(notdir $(CURDIR)).zip
+ZIPNAME:=$(NAME).zip
 
 dist: $(ZIPNAME)
 

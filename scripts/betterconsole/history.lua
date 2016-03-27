@@ -12,6 +12,14 @@ local CircularQueueView = require "betterconsole.lib.circularqueueview"
 
 history = CircularQueueView( CFG.CONSOLE_HISTORY or 128 )
 
+local ins = history.Insert
+history.Insert = function(self, x, ...)
+	print("inserting "..tostring(x))
+	return ins(self, x, ...)
+end
+
+history:Insert ""
+
 
 function Save()
 	local howmany = CFG.HISTORY_LINES_SAVED or history.size
