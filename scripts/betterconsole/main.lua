@@ -14,6 +14,7 @@ require "betterconsole.screens.betterconsolescreen"
 
 local BetterConsoleUtil = require "betterconsole.lib.betterconsoleutil"
 
+local Pred = require "betterconsole.lib.pred"
 
 ---
 
@@ -26,20 +27,44 @@ local Processor = require "betterconsole.processor"
 --- 
 
 local function bindCompilerToMainFunctions(gcc_spec)
-	local run = assert( _G.ExecuteConsoleCommand )
-
 	local function NewFakeLoadstring(gcc)
 		return function(str)
 			return function() gcc(str) end
 		end
 	end
 
+	local NewSmartRunner = (function()
+		local run
+		if Pred.IsDST() then
+			run = assert( _G.ExecuteConsoleCommand )
+			return function(gcc)
+				local fake_loadstring = NewFakeLoadstring(gcc)
+				return function(...)
+					_G.loadstring = fake_loadstring
 
-	local is_dedi = _G.TheNet:IsDedicated()
+					run(...)
+
+					_G.loadstring = loadstring
+				end
+			end
+		else
+			return function(gcc)
+				return function(...)
+					gcc(...)
+				end
+			end
+		end
+	end)()
+
+	local is_dedi = Pred.IsDST() and _G.TheNet:IsDedicated()
 
 	local gccs = {
 		stdin = gcc_spec:Copy(is_dedi and "stdin" or "console"),
 	}
+
+	if not Pred.IsDST() then
+		global "ExecuteConsoleCommand"
+	end
 
 	function _G.ExecuteConsoleCommand(fnstr, guid, ...)
 		local loadstring = _G.loadstring
@@ -57,11 +82,7 @@ local function bindCompilerToMainFunctions(gcc_spec)
 			end
 		end
 
-		_G.loadstring = NewFakeLoadstring(gcc)
-
-		run(fnstr, ...)
-
-		_G.loadstring = loadstring
+		NewSmartRunner(gcc)(fnstr, guid, ...)
 	end
 end
 

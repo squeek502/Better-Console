@@ -16,13 +16,24 @@ local CFG = require "betterconsole.cfg_table"
 local Logging = require "betterconsole.lib.logging"
 local History = require "betterconsole.history"
 
+local Pred = require "betterconsole.lib.pred"
+
 local preprocess = require "betterconsole.preprocess"
 local Compiler = require "betterconsole.compiler"
 require "betterconsole.processor"
 
 --- 
 
-local oldRun = assert( ConsoleScreen.Run )
+local dispatchSelf
+if Pred.IsDST() then
+	dispatchSelf = assert( ConsoleScreen.Run )
+else
+	dispatchSelf = function(self)
+		local fnstr = self.console_edit:GetString()
+		SuUsedAdd("console_used")
+		return ExecuteConsoleCommand(fnstr)
+	end
+end
 
 --- 
 
@@ -69,7 +80,7 @@ local function ImbueEssentials(self)
 		end
 
 		self.console_edit:SetString(r_chunk)
-		return oldRun(self)
+		return dispatchSelf(self)
 	end
 
 	self.parser:SetMultiline(false)

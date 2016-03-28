@@ -1,6 +1,9 @@
 -- improve the console
 
 _G = GLOBAL
+require = _G.require
+
+Pred = require "betterconsole.lib.pred"
 
 -------------------------------------------
 -- load config
@@ -14,7 +17,7 @@ LoadConfig('config.default.lua', true)
 LoadModConfig()
 LoadConfig('config.lua')
 
-print("Better-Console MOD CONFIG STRING\n"..GenerateModConfigString())
+-- print("Better-Console MOD CONFIG STRING\n"..GenerateModConfigString())
 
 -------------------------------------------
 -- bootstrap

@@ -3,15 +3,20 @@ name = "Better Console"
 description = "A few improvements to the console"
 author = "simplex and squeek"
 version = "2.0.0"
+
+dont_starve_compatible = true
+reign_of_giants_compatible = true
+shipwrecked_compatible = true
 dst_compatible = true
+
 client_only_mod = true
 all_clients_require_mod = false
 
 forumthread = "/files/file/1467-dst-better-console/"
 
-api_version = 10
+api_version = 6
+api_version_dst = 10
 
--- Can specify a custom icon for this mod!
 icon_atlas = "modicon.xml"
 icon = "modicon.tex"
 
