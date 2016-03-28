@@ -83,9 +83,6 @@ local function bindCompilerToMainFunctions(gcc_spec)
 		end
 
 		NewSmartRunner(gcc)(fnstr, guid, ...)
-		if is_dedi and gcc == gccs.stdin  then
-
-		end
 	end
 end
 
