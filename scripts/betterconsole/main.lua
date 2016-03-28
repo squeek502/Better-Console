@@ -59,7 +59,7 @@ local function bindCompilerToMainFunctions(gcc_spec)
 	local is_dedi = Pred.IsDST() and _G.TheNet:IsDedicated()
 
 	local gccs = {
-		stdin = gcc_spec:Copy(is_dedi and "stdin" or "console"),
+		stdin = gcc_spec:Copy(is_dedi and "stdin++" or "console"),
 	}
 
 	if not Pred.IsDST() then
@@ -83,6 +83,9 @@ local function bindCompilerToMainFunctions(gcc_spec)
 		end
 
 		NewSmartRunner(gcc)(fnstr, guid, ...)
+		if is_dedi and gcc == gccs.stdin  then
+
+		end
 	end
 end
 

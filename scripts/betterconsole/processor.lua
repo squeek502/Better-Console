@@ -90,7 +90,7 @@ local function NewErrorFilter(gcc)
 	local gcc_filter
 	if gcc then
 		local chunkname = assert(gcc:GetChunkName())
-		local line_patt = "^@"..chunkname..":.+$"
+		local line_patt = "@"..chunkname..":"
 		gcc_filter = function(trace)
 
 			local lines = {}
@@ -98,7 +98,7 @@ local function NewErrorFilter(gcc)
 			for line in trace:gmatch("[^\n\r]+") do
 				table.insert(lines, line)
 
-				if line:find(line_patt) then
+				if line:find(line_patt, 1, true) == 1 then
 					last_owned_chunk_idx = #lines
 				end
 			end
