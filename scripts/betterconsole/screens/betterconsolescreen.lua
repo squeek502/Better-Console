@@ -213,7 +213,9 @@ function ConsoleScreen:DoInit()
 	self.focus_forward = self.console_edit
 
 	self.console_edit.validrawkeys[KEY_ENTER] = true
-	self.console_edit:SetAllowClipboardPaste(true)
+	if self.console_edit.SetAllowClipboardPaste then
+		self.console_edit:SetAllowClipboardPaste(true)
+	end
 	
 	self.downbutton = self.root:AddChild(ImageButton("images/ui.xml", "spin_arrow.tex"))
     self.downbutton:SetPosition(edit_width/2+30, label_height, 0)
