@@ -2,7 +2,7 @@
 name = "Better Console"
 description = "A few improvements to the console"
 author = "simplex and squeek"
-version = "2.0.0"
+version = "2.0.1"
 
 dont_starve_compatible = true
 reign_of_giants_compatible = true
